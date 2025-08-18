@@ -1,0 +1,32 @@
+{
+  "name": "encore-prisma-example",
+  "private": true,
+  "version": "0.0.1",
+  "description": "Encore + Prisma Typescript Example",
+  "license": "MPL-2.0",
+  "type": "module",
+  "scripts": {
+    "postinstall": "npx prisma generate --schema=prisma/schema.prisma"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/node": "^20.5.7",
+    "@types/socket.io": "^3.0.1",
+    "prisma": "^5.22.0",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "@types/jsonwebtoken": "^9.0.9",
+    "bcrypt": "^5.1.1",
+    "encore.dev": "^1.48.12",
+    "firebase-admin": "^13.3.0",
+    "google-auth-library": "^9.15.1",
+    "jsonwebtoken": "^9.0.2",
+    "mediasoup": "^3.15.5",
+    "socket.io": "^4.8.1"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.13.0"
+  }
+}

@@ -1,0 +1,520 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+// TODO: replace the url below with the output from running
+// encore db conn-uri encore_prisma_test --shadow
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String  @id @default(uuid())
+  fullname             String
+  email                String? @unique
+  mobile               String? @unique
+  profilePic           String?
+  password             String?
+  regNumber            Int     @unique @default(autoincrement())
+  role                 String  @default("USER")
+  accountType          String  @default("REGULAR")
+  activePackageId      String? @unique // Ensure only one active package at a time
+  activeAnimationId    String? @unique // Ensure only one active animation at a time
+  activeProfileFrameId String? @unique // Ensure only one active profile frame at a time
+  diamond              Int     @default(0)
+  diamondLevel         Int     @default(0)
+  isDiamondBlocked     Boolean @default(false)
+  isAccountBlocked     Boolean @default(false)
+  isAgent              Boolean @default(false) // Flag to indicate if the user is an agent
+  isModerator          Boolean @default(false) // Flag to indicate if the user is a moderator
+  isHost               Boolean @default(false) // Flag to indicate if the user is a host
+  isReseller           Boolean @default(false) // Flag to indicate if the user is a reseller
+  deviceId             String? // Optional device ID
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relation to track the currently active package
+  ActivePackage      PackagePurchase?      @relation(fields: [activePackageId], references: [id], onDelete: SetNull)
+  ActiveAnimation    AnimationPurchase?    @relation(references: [id], fields: [activeAnimationId], onDelete: SetNull)
+  ActiveProfileFrame ProfileFramePurchase? @relation(references: [id], fields: [activeProfileFrameId], onDelete: SetNull)
+
+  Followers              User[]                   @relation("UserFollows")
+  Following              User[]                   @relation("UserFollows")
+  BlockedBy              User[]                   @relation("UserBlocks")
+  Blocking               User[]                   @relation("UserBlocks")
+  DiamondSenderHistory   ResellerHistory[]        @relation("DiamondSender")
+  DiamondReceiverHistory ResellerHistory[]        @relation("DiamondReceiver")
+  DiamondHistoryUser     DiamondHistory[]         @relation("User")
+  DiamondHistoryAdmin    DiamondHistory[]         @relation("Admin")
+  P2PSender              P2PMessage[]             @relation("SenderMessage")
+  P2PReceiver            P2PMessage[]             @relation("ReceiverMessage")
+  HostRequestUser        HostRequest[]            @relation("HostRequestUser")
+  HostRequestAgent       HostRequest[]            @relation("HostRequestAgent")
+  LiveStream             LiveStream[]             @relation("LiveStreamHost")
+  RoomBlockBlocker       RoomBlock[]              @relation("RoomBlockBlocker")
+  RoomBlockBlocked       RoomBlock[]              @relation("RoomBlockBlocked")
+  History                History[]
+  RoomHistory            RoomHistory[]
+  UserActivity           UserActivity[]
+  ViewerEngagement       ViewerEngagement[]
+  UserMetrics            UserMetrics[]
+  ProducerActivity       ProducerActivity[]
+  PackagePurchaseRequest PackagePurchaseRequest[]
+  LiveStreamParticipant  LiveStreamParticipant[]
+  WithdrawRequest        WithdrawRequest[]
+  GiftHistory            GiftHistory[]
+  Devices                Device[] // One-to-many relationship with Device
+  NotificationRead       NotificationRead[]
+  PersonalNotifications  PersonalNotification[]
+  CustomWithdrawRequests CustomWithdrawRequest[] // Relation to CustomWithdrawRequest
+}
+
+model RoomBlock {
+  id        String   @id @default(uuid())
+  blockerId String // The user who blocks
+  blockedId String // The user who is blocked
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  blocker User @relation("RoomBlockBlocker", fields: [blockerId], references: [id])
+  blocked User @relation("RoomBlockBlocked", fields: [blockedId], references: [id])
+
+  @@unique([blockerId, blockedId]) // Prevent duplicate blocks
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  expiryDate  DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  NotificationReads NotificationRead[] // Relation to track read status
+}
+
+model NotificationRead {
+  id             String   @id @default(uuid())
+  userId         String
+  notificationId String
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+}
+
+model PersonalNotification {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  description String
+  expiryDate  DateTime
+  senderInfo  Json?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PackagePurchase {
+  id             String    @id @default(uuid())
+  name           String
+  type           String //VIP, VVIP
+  validity       Int // Store validity in days, months, or years TODO can be change to days which can be converted to month or years
+  amount         Int
+  imageUrl       String
+  entryAnimation String?
+  profileFrame   String?
+  purchaseDate   DateTime  @default(now()) // When the package was purchased
+  expiryDate     DateTime? // When the package expires
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User User?
+}
+
+model History {
+  id        String   @id @default(uuid())
+  userId    String
+  duration  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User User @relation(references: [id], fields: [userId])
+}
+
+model ResellerHistory {
+  id         String   @id @default(uuid())
+  senderId   String // The reseller who transferred the diamonds
+  receiverId String // The user who received the diamonds
+  diamond    Int // Number of diamonds transferred
+  createdAt  DateTime @default(now()) // Timestamp of the transfer
+  updatedAt  DateTime @updatedAt
+
+  Sender   User @relation("DiamondSender", fields: [senderId], references: [id])
+  Receiver User @relation("DiamondReceiver", fields: [receiverId], references: [id])
+}
+
+model Device {
+  id        Int      @id @default(autoincrement())
+  deviceId  String   @unique
+  isBlocked Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[] // One-to-many relationship with User
+}
+
+model Animation {
+  id       String @id @default(uuid())
+  name     String
+  videoUrl String
+  amount   Int
+  validity Int // Store validity in days, months, or years TODO can be change to days which can be converted to month or years
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AnimationPurchase {
+  id           String    @id @default(uuid())
+  name         String
+  videoUrl     String
+  amount       Int
+  validity     Int // Store validity in days, months, or years TODO can be change to days which can be converted to month or years
+  purchaseDate DateTime  @default(now()) // When the package was purchased
+  expiryDate   DateTime? // When the package expires
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User User?
+}
+
+model ProfileFramePurchase {
+  id           String    @id @default(uuid())
+  name         String
+  imageUrl     String
+  amount       Int
+  validity     Int // Store validity in days, months, or years TODO can be change to days which can be converted to month or years
+  purchaseDate DateTime  @default(now()) // When the package was purchased
+  expiryDate   DateTime? // When the package expires
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User?
+}
+
+model ProfileFrame {
+  id       String @id @default(uuid())
+  name     String
+  imageUrl String
+  amount   Int
+  validity Int // Store validity in days, months, or years TODO can be change to days which can be converted to month or years
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model VipPackage {
+  id       String @id @default(uuid())
+  name     String
+  type     String @default("VIP") //VIP, VVIP
+  imageUrl String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  VipSubPackages VipSubPackage[] // One-to-many relationship with VipSubPackage
+}
+
+model VipSubPackage {
+  id             String  @id @default(uuid())
+  vipPackageId   String // Foreign key to VipPackage
+  name           String
+  amount         Int
+  validity       Int // Store validity in days, months, or years TODO can be change to days which can be converted to month or years
+  imageUrl       String
+  entryAnimation String?
+  profileFrame   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  VipPackage             VipPackage               @relation(fields: [vipPackageId], references: [id]) // Relation to VipPackage
+  PackagePurchaseRequest PackagePurchaseRequest[]
+}
+
+model PackagePurchaseRequest {
+  id                String   @id @default(uuid())
+  userId            String
+  vipSubPackageId   String
+  paymentType       String // e.g., "bikash", "nagad"
+  sendingNumber     String // The number used to send the payment
+  transactionNumber String // The transaction number of the payment
+  paymentSlipUrl    String? // URL of the payment slip
+  status            String   @default("pending") // pending, accepted, rejected
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user          User          @relation(fields: [userId], references: [id])
+  vipSubPackage VipSubPackage @relation(fields: [vipSubPackageId], references: [id])
+}
+
+model DiamondPackage {
+  id        String   @id @default(uuid())
+  amount    Int
+  bdt       Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model DiamondHistory {
+  id        String   @id @default(uuid())
+  diamond   Int
+  userId    String
+  type      String // either add/remove
+  handlerId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User  User @relation("User", references: [id], fields: [userId], onDelete: Cascade)
+  Admin User @relation("Admin", references: [id], fields: [handlerId], onDelete: Cascade)
+}
+
+model RoomHistory {
+  id                String   @id @default(uuid())
+  roomId            String
+  roomCreatorId     String
+  roomCreatorName   String
+  roomStartTime     DateTime
+  roomEndTime       DateTime
+  totalRoomDuration Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Creator User @relation(fields: [roomCreatorId], references: [id])
+
+  UserActivity UserActivity[]
+}
+
+model UserActivity {
+  id            String @id @default(uuid())
+  roomHistoryId String
+  userId        String
+  userName      String
+  totalTime     Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  RoomHistory RoomHistory @relation(fields: [roomHistoryId], references: [id])
+  User        User        @relation(fields: [userId], references: [id])
+}
+
+// enum ROLE {
+//   USER
+//   ADMIN
+//   RESELLER
+//   MODERATOR
+// }
+
+// enum ACCOUNT_TYPE {
+//   REGULAR
+//   VIP
+//   VVIP
+// }
+
+model P2PMessage {
+  id                String   @id @default(uuid())
+  senderId          String
+  receiverId        String
+  message           String
+  messageType       String   @default("text") // text, voice
+  seen              Boolean  @default(false) // Tracks if the message has been seen
+  deleteForReceiver Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  MessageSender   User @relation("SenderMessage", references: [id], fields: [senderId])
+  MessageReceiver User @relation("ReceiverMessage", references: [id], fields: [receiverId])
+}
+
+model Gift {
+  id        String   @id @default(uuid())
+  videoUrl  String?
+  audioUrl  String?
+  gifUrl    String?
+  amount    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GiftHistory {
+  id           String   @id @default(uuid())
+  diamondBonus Int
+  diamond      Int
+  senderId     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  GiftSender User @relation(references: [id], fields: [senderId], onDelete: Cascade)
+}
+
+model FcmToken {
+  id     String @id @default(uuid())
+  userId String @unique
+  token  String
+}
+
+model HostRequest {
+  id        String   @id @default(uuid())
+  userId    String
+  agentId   String
+  type      String   @default("video") // Type of request (e.g., "audio", "video")
+  status    String   @default("pending") // pending, accepted, rejected
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User @relation("HostRequestUser", fields: [userId], references: [id])
+  agent User @relation("HostRequestAgent", fields: [agentId], references: [id])
+}
+
+// LiveStream model to track live streaming sessions
+model LiveStream {
+  id            String    @id @default(uuid())
+  hostId        String
+  roomId        String // The room where the engagement is happening
+  type          String // audio or video
+  isCreatorHost Boolean   @default(false)
+  startTime     DateTime
+  endTime       DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  host                  User                    @relation("LiveStreamHost", fields: [hostId], references: [id])
+  ViewerEngagement      ViewerEngagement[]
+  ProducerActivity      ProducerActivity[]
+  LiveStreamParticipant LiveStreamParticipant[]
+}
+
+model LiveStreamParticipant {
+  id           String    @id @default(uuid())
+  liveStreamId String // The live stream the user is participating in
+  roomId       String
+  role         String    @default("participant") // Role of the user (e.g., "participant", "creator")
+  userId       String // The user participating in the live stream
+  startTime    DateTime // When the user joined the live stream
+  endTime      DateTime? // When the user left the live stream
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id])
+  liveStream LiveStream @relation(fields: [liveStreamId], references: [id], onDelete: Cascade)
+}
+
+model ProducerActivity {
+  id           String    @id @default(uuid())
+  userId       String // The producer's user ID
+  roomId       String // The room where the user is producing
+  liveStreamId String // The live stream being produced
+  type         String // Type of stream (audio or video)
+  startTime    DateTime // When the user started producing
+  endTime      DateTime? // When the user stopped producing
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id])
+  liveStream LiveStream @relation(fields: [liveStreamId], references: [id], onDelete: Cascade)
+}
+
+model ViewerEngagement {
+  id           String    @id @default(uuid())
+  userId       String // The viewer's user ID
+  roomId       String // The room where the engagement is happening
+  liveStreamId String // The live stream being viewed
+  startTime    DateTime // When the user started viewing
+  endTime      DateTime? // When the user stopped viewing
+  streamCount  Int // Number of streams being viewed simultaneously
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id])
+  liveStream LiveStream @relation(fields: [liveStreamId], references: [id], onDelete: Cascade)
+}
+
+model UserMetrics {
+  id              String   @id @default(uuid())
+  userId          String   @unique // The user's ID 
+  totalViewTime   Int      @default(0) // Total time spent viewing (in seconds)
+  totalStreamTime Int      @default(0) // Total time spent streaming (in seconds)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// flow live projects
+model DiamondExchange {
+  id        String   @id @default(uuid())
+  diamond   Int // Number of diamonds
+  amount    Float // Real money amount (e.g., in USD or BDT)
+  currency  String   @default("bdt") // Currency type (e.g., "USD", "BDT")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  WithdrawRequest WithdrawRequest[]
+}
+
+// flow live projects
+model WithdrawRequest {
+  id                String   @id @default(uuid())
+  userId            String // The user who made the request
+  diamondExchangeId String // The diamond exchange plan
+  paymentType       String // e.g., "bikash", "nagad"
+  userFullname      String // Full name of the user
+  userNumber        String // User's payment number
+  status            String   @default("pending") // pending, accepted, rejected
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user            User            @relation(fields: [userId], references: [id])
+  diamondExchange DiamondExchange @relation(fields: [diamondExchangeId], references: [id])
+}
+
+// for custom payment amount 
+model CustomWithdrawRequest {
+  id                String   @id @default(uuid())
+  userId            String // The user who made the request
+  amount            Float // Custom amount requested for withdrawal
+  paymentType       String // e.g., "bikash", "nagad"
+  userFullname      String // Full name of the user
+  userNumber        String // User's payment number( account number)
+  status            String   @default("pending") // pending, accepted, rejected
+  note              String? // Optional note for the request
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model DiamondSendPercentage {
+  id           String   @id @default(uuid())
+  percentage   Decimal  @default(0.02) // Percentage of diamonds to be sent
+  subtractFrom String   @default("sender") // Indicates whether the percentage is subtracted from the sender or receiver
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
