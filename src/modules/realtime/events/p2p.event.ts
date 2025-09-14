@@ -126,8 +126,8 @@ export const handleP2PEvents = (socket: Socket, io: Server | null) => {
                     message: text,
                     messageType,
                 })
-                socket.to(targetUserId).emit(EMIT_P2P.RECEIVED_P2P_MESSAGE, {...p2pMessage, senderName: fullname });
-                io?.to(id).emit(EMIT_P2P.RECEIVED_P2P_MESSAGE, {...p2pMessage, senderName: fullname });
+                socket.to(targetUserId).emit(EMIT_P2P.RECEIVED_P2P_MESSAGE, { ...p2pMessage, senderName: fullname });
+                io?.to(id).emit(EMIT_P2P.RECEIVED_P2P_MESSAGE, { ...p2pMessage, senderName: fullname });
                 return p2pMessage
             }
         );
@@ -187,10 +187,7 @@ export const handleP2PEvents = (socket: Socket, io: Server | null) => {
     socket.on(LISTEN_P2P.OFFER, async (
         { offer, targetUserId }: IOfferDto,
         callback: Callback<undefined>) => {
-        await handleEvent(
-            socket,
-            LISTEN_P2P.OFFER,
-            callback,
+        await handleEvent(socket, LISTEN_P2P.OFFER, callback,
             async ({ id, fullname }: Member) => {
                 log.info(`Offer received from ${fullname} with userId ${id}`);
                 socket.to(targetUserId).emit(EMIT_P2P.OFFER_RECEIVED, { offer, senderId: id, senderName: fullname });

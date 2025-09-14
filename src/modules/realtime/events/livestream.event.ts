@@ -1,7 +1,15 @@
+import { APIError } from "encore.dev/api";
 import log from "encore.dev/log";
+import { RtpCapabilities } from "mediasoup/node/lib/rtpParametersTypes";
 import { Server, Socket } from "socket.io";
-import { EMIT, LISTEN } from "../socket.constant";
-import { checkRoomExist } from "../socket.service";
+import DiamondSendPercentageService from "../../diamond-send-percentage/diamond-send-percentage.service";
+import LiveStreamService from "../../livestream/livestream.service";
+import RoomBlockService from "../../room-block/room-block.service";
+import { UserDto } from "../../users/user.interface";
+import UserService from "../../users/user.service";
+import { Callback, handleEvent } from "../helper/socket.helper";
+import { getLeastLoadedWorker } from "../helper/worker.helper";
+import { IAcceptVideoCallDto, IEndVideoCallDto, IMakeVideoCallDto, IReceivedVideoCallDto, IRejectVideoCallDto } from "../interfaces/p2p-call.interface";
 import {
     DiamondMessageDto,
     IAcceptRequest,
@@ -32,20 +40,28 @@ import {
     Member,
     ProducerStat
 } from "../interfaces/room.interface";
-import { Callback, handleEvent } from "../helper/socket.helper";
-import { RtpCapabilities } from "mediasoup/node/lib/rtpParametersTypes";
-import { getLeastLoadedWorker } from "../helper/worker.helper";
-import Room from "../services/room.service";
-import { APIError } from "encore.dev/api";
-import { WorkerManager } from "../repositories/worker.service";
-import LiveStreamService from "../../livestream/livestream.service";
 import { ISendDiamond, ISendDiamondResponse } from "../interfaces/socket.interface";
-import UserService from "../../users/user.service";
-import { UserDto } from "../../users/user.interface";
-import DiamondSendPercentageService from "../../diamond-send-percentage/diamond-send-percentage.service";
-import { IAcceptVideoCallDto, IEndVideoCallDto, IMakeVideoCallDto, IReceivedVideoCallDto, IRejectVideoCallDto } from "../interfaces/p2p-call.interface";
-import RoomBlockService from "../../room-block/room-block.service";
+import { WorkerManager } from "../repositories/worker.service";
+import Room from "../services/room.service";
+import { EMIT, LISTEN } from "../socket.constant";
+import { checkRoomExist } from "../socket.service";
 
+interface ICreateRoomResponse {
+    rtpCapabilities: RtpCapabilities;
+    roomId: string;
+    roomType?: string;
+    roomStartTime: number;
+    inRoomMessageBlock: boolean;
+}
+interface IJoinRoomResponse {
+    rtpCapabilities: RtpCapabilities
+    producerStats: ProducerStat[]
+    inRoomMessageBlock: boolean
+    roomStartTime: number
+    focusUser: string
+    members: UserDto[]
+    diamondMessageHistory: DiamondMessageDto[]
+}
 export const handleLiveStreamEvents = (
     socket: Socket,
     io: Server | null,
@@ -55,14 +71,8 @@ export const handleLiveStreamEvents = (
 ) => {
     socket.on(
         LISTEN.CREATE_ROOM,
-        async (
-            payload: ICreateRoom,
-            callback: Callback<{ rtpCapabilities: RtpCapabilities; roomId: string }>
-        ) => {
-            await handleEvent(
-                socket,
-                LISTEN.CREATE_ROOM,
-                callback,
+        async (payload: ICreateRoom, callback: Callback<ICreateRoomResponse>) => {
+            await handleEvent(socket, LISTEN.CREATE_ROOM, callback,
                 async (creator: Member) => {
                     const roomId = creator.id;
                     if (rooms.has(roomId))
@@ -87,24 +97,26 @@ export const handleLiveStreamEvents = (
                     worker.incrementRooms();
 
                     const rtpCapabilities = room.addClient(creator);
+
                     await room.userJoin(creator.id, "creator")
                     await room.addToProduceList(creator.id);
 
-                    return { rtpCapabilities, roomType: room.getRoomType, roomId, roomStartTime: room.getRoomStartTime, inRoomMessageBlock: room.getInRoomMessageBlock() };
+                    const response: ICreateRoomResponse = {
+                        rtpCapabilities,
+                        roomType: room.getRoomType,
+                        roomId,
+                        roomStartTime: room.getRoomStartTime,
+                        inRoomMessageBlock: room.getInRoomMessageBlock()
+                    };
+                    return response
                 }
             );
         }
     );
     socket.on(
         LISTEN.JOIN_ROOM,
-        async (
-            { roomId }: IJoinRoom,
-            callback: Callback<{ rtpCapabilities: RtpCapabilities }>
-        ) => {
-            await handleEvent(
-                socket,
-                LISTEN.JOIN_ROOM,
-                callback,
+        async ({ roomId }: IJoinRoom, callback: Callback<IJoinRoomResponse>) => {
+            await handleEvent(socket, LISTEN.JOIN_ROOM, callback,
                 async (user: Member) => {
                     const room = checkRoomExist(roomId);
                     const creator = room.getCreatorInfo();
@@ -136,7 +148,7 @@ export const handleLiveStreamEvents = (
                         creator: updatedCreator,
                         memberCount,
                     });
-                    return {
+                    const response: IJoinRoomResponse = {
                         rtpCapabilities,
                         producerStats,
                         inRoomMessageBlock: room.getInRoomMessageBlock(),
@@ -145,6 +157,7 @@ export const handleLiveStreamEvents = (
                         members,
                         diamondMessageHistory: room.getDiamondMessageHistory()
                     };
+                    return response
                 }
             );
         }
@@ -152,10 +165,7 @@ export const handleLiveStreamEvents = (
     socket.on(
         LISTEN.LEAVE_ROOM,
         async ({ roomId }: ILeaveRoom, callback: Callback<undefined>) => {
-            await handleEvent(
-                socket,
-                LISTEN.LEAVE_ROOM,
-                callback,
+            await handleEvent(socket, LISTEN.LEAVE_ROOM, callback,
                 async ({ id: memberId }: Member) => {
                     const room = checkRoomExist(roomId);
                     await room.userLeave(memberId);
@@ -163,18 +173,17 @@ export const handleLiveStreamEvents = (
                     const creator = room.getCreatorInfo();
                     const updatedCreator = await UserService.getUserInfoWithAgencyData(creator.id);
                     const memberCount = room.getMemberCount();
-                    room
-                        .getMemberIds()
-                        .forEach((id) =>
-                            socket
-                                .to(id)
-                                .emit(EMIT.ROOM_LEFT, { roomId, memberId, memberCount })
-                        );
+                    room.getMemberIds().forEach((id) =>
+                        socket
+                            .to(id)
+                            .emit(EMIT.ROOM_LEFT, { roomId, memberId, memberCount })
+                    );
                     socket.broadcast.emit(EMIT.ROOM_UPDATED, {
                         roomId,
                         creator: updatedCreator,
                         memberCount,
                     });
+
                     return undefined;
                 }
             );
@@ -948,8 +957,7 @@ export const handleLiveStreamEvents = (
                 LISTEN.BLOCK_USER_IN_ROOM,
                 callback,
                 async ({ id }: Member) => {
-                    const room = checkRoomExist(roomId);
-
+                    checkRoomExist(roomId);
                     const blockerId = id;
                     const response = await RoomBlockService.blockUser(blockerId, blockedId);
                     socket.to(blockedId).emit(EMIT.BLOCKED_FROM_ROOM, { roomId, data: response });

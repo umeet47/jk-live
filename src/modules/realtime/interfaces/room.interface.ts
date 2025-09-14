@@ -2,7 +2,6 @@ import { MediaKind, RtpCapabilities, RtpParameters } from "mediasoup/node/lib/rt
 import { Consumer, ConsumerType, Producer, Transport } from "mediasoup/node/lib/types";
 import { DtlsParameters, IceCandidate, IceParameters } from "mediasoup/node/lib/WebRtcTransportTypes";
 import { UserDto } from "../../users/user.interface";
-import { PackagePurchase } from "@prisma/client";
 
 interface IRoom {
     roomId: string;
