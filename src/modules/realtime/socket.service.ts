@@ -321,6 +321,57 @@ export const initializeSocketServer = async (): Promise<void> => {
         });
       }
     });
+    // --- Manual Logout Event ---
+    socket.on(LISTEN.LOGOUT, async (_data: unknown, callback: Callback<undefined>) => {
+      await handleEvent(socket, LISTEN.LOGOUT, callback, async () => {
+        // Cancel any pending disconnect timer
+        if (pendingDisconnects.has(userId)) {
+          clearTimeout(pendingDisconnects.get(userId)!);
+          pendingDisconnects.delete(userId);
+        }
+        // Immediately clean up user state
+        activeUsers.delete(userId);
+
+        // Remove user from all rooms
+        for (const [roomId, room] of rooms) {
+          const memberIds = room.getMemberIds();
+          if (memberIds.includes(userId)) {
+            if (room.getCallType === "p2p" || room.getCreatorInfo().id === userId) {
+              await room.close();
+              rooms.delete(roomId);
+              roomLiveList.delete(roomId);
+              socket.broadcast.emit(
+                room.getCallType === "p2p" ? EMIT.VIDEO_CALL_ENDED : EMIT.ROOM_DELETED,
+                { roomId }
+              );
+            } else {
+              await room.userLeave(userId);
+              room.removeClient(userId);
+              const creator = room.getCreatorInfo();
+              const updatedCreator = await UserService.getUserInfoWithAgencyData(creator.id);
+              const memberCount = room.getMemberCount();
+              room.getMemberIds().forEach((id) =>
+                socket.to(id).emit(EMIT.ROOM_LEFT, { roomId, memberId: userId, memberCount })
+              );
+              socket.broadcast.emit(EMIT.ROOM_UPDATED, {
+                roomId,
+                creator: updatedCreator,
+                memberCount,
+              });
+            }
+            workerEvents.emit(RECALCULATE_STATS);
+            break; // User can only be in one room
+          }
+        }
+        // Set manual logout flag to prevent disconnect timer
+        (socket.data as any).manualLogout = true;
+        // Disconnect the socket immediately
+        socket.disconnect(true);
+
+        log.info(`User ${userId} logged out manually and cleaned up.`);
+        return undefined;
+      });
+    });
   });
 
   // Handle server errors

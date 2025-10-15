@@ -6,6 +6,7 @@ import {
 } from "mediasoup/node/lib/types";
 
 export const LISTEN = {
+  LOGOUT: "logout",
   CLEANUP: "cleanup",
   MESSAGE: "message",
   DISCONNECT: "disconnect",
