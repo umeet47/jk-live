@@ -29,8 +29,6 @@ export const handleEvent = async <T, R>(
         if (typeof callback === "function") {
             callback({ success: true, data: result });
         }
-
-        callback({ success: true, data: result });
     } catch (error) {
         const [seconds, nanoseconds] = process.hrtime(startTime);
         const durationMs = seconds * 1000 + nanoseconds / 1000000;
