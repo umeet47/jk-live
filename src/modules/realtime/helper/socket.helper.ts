@@ -26,6 +26,9 @@ export const handleEvent = async <T, R>(
             durationMs: Number(durationMs.toFixed(2)),
             userId: socket.data.id,
         });
+        if (typeof callback === "function") {
+            callback({ success: true, data: result });
+        }
 
         callback({ success: true, data: result });
     } catch (error) {
@@ -42,6 +45,8 @@ export const handleEvent = async <T, R>(
             error: message,
         });
         log.error(`Error: ${message}`, error);
-        callback({ success: false, error: message });
+        if (typeof callback === "function") {
+            callback({ success: false, error: message });
+        }
     }
 };
