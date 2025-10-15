@@ -221,6 +221,11 @@ export const initializeSocketServer = async (): Promise<void> => {
     });
 
     socket.on(LISTEN.DISCONNECT, async () => {
+       // Prevent timer if manual logout
+      if ((socket.data as any).manualLogout) {
+        log.info(`User ${userId} disconnect skipped timer due to manual logout.`);
+        return;
+      }
       const startTime = process.hrtime();
       const startDate = new Date();
 
