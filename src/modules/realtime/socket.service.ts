@@ -13,6 +13,7 @@ import { initializeWorkers, RECALCULATE_STATS, recalculateWorkerStats, workerEve
 import { handleLiveStreamEvents } from "./events/livestream.event";
 import { handleFollowUnFollowEvents } from "./events/follow.event";
 import UserService from "../users/user.service";
+import { Member } from "./interfaces/room.interface";
 
 const pendingDisconnects = new Map<string, NodeJS.Timeout>();
 let httpServer: ReturnType<typeof createServer> | null = null;
@@ -323,7 +324,8 @@ export const initializeSocketServer = async (): Promise<void> => {
     });
     // --- Manual Logout Event ---
     socket.on(LISTEN.LOGOUT, async (_data: unknown, callback: Callback<undefined>) => {
-      await handleEvent(socket, LISTEN.LOGOUT, callback, async () => {
+      await handleEvent(socket, LISTEN.LOGOUT, callback, async ({ id }: Member) => {
+        const userId = id;
         // Cancel any pending disconnect timer
         if (pendingDisconnects.has(userId)) {
           clearTimeout(pendingDisconnects.get(userId)!);
