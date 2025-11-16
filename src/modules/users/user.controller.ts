@@ -209,6 +209,10 @@ export const addDiamondToUser = api(
   async ({ userId, diamond }: {
     userId: string; diamond: number;
   }): Promise<UserResponse> => {
+    // Validate amount: must be a number and not negative
+    if (typeof diamond !== "number" || Number.isNaN(diamond) || diamond < 0) {
+      throw APIError.invalidArgument("Diamond must be a non-negative number");
+    }
     const adminId = getAuthData()!.userID;
     const result = await UserService.addDiamondToUser(diamond, userId, adminId);
     return { success: true, result };
@@ -329,7 +333,7 @@ export const addRemoveDiamondFromOrToUserWithoutHistory = api(
   async (data: { userId: string, diamond: number, status: string }): Promise<{
     success: true
   }> => {
-        // Validate amount: must be a number and not negative
+    // Validate amount: must be a number and not negative
     if (typeof data.diamond !== "number" || Number.isNaN(data.diamond) || data.diamond < 0) {
       throw APIError.invalidArgument("Diamond must be a non-negative number");
     }
