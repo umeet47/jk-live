@@ -225,6 +225,10 @@ export const addDiamondToUser = api(
 export const removeDiamond = api(
   { expose: true, auth: true, method: "PATCH", path: "/diamond/remove/:userId", },
   async ({ userId, diamond, }: { userId: string; diamond: number; }): Promise<UserResponse> => {
+    // Validate amount: must be a number and not negative
+    if (typeof diamond !== "number" || Number.isNaN(diamond) || diamond < 0) {
+      throw APIError.invalidArgument("Diamond must be a non-negative number");
+    }
     const adminId = getAuthData()!.userID;
     const result = await UserService.removeDiamondFromUser(diamond, adminId, userId);
     return { success: true, result };
