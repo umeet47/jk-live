@@ -314,6 +314,10 @@ export const removePurchase = api(
 export const transferDiamond = api(
   { expose: true, method: "PATCH", path: "/admin/transfer-diamond" },
   async (data: { fromUserId: string, toUserId: string, diamond: number }): Promise<{ success: true }> => {
+    // Validate amount: must be a number and not negative
+    if (typeof data.diamond !== "number" || Number.isNaN(data.diamond) || data.diamond < 0) {
+      throw APIError.invalidArgument("Diamond must be a non-negative number");
+    }
     await UserService.transferDiamondWithoutHistory(data);
     return { success: true };
   }
@@ -325,6 +329,10 @@ export const addRemoveDiamondFromOrToUserWithoutHistory = api(
   async (data: { userId: string, diamond: number, status: string }): Promise<{
     success: true
   }> => {
+        // Validate amount: must be a number and not negative
+    if (typeof data.diamond !== "number" || Number.isNaN(data.diamond) || data.diamond < 0) {
+      throw APIError.invalidArgument("Diamond must be a non-negative number");
+    }
     await UserService.addRemoveDiamondFromOrToUserWithoutHistory(data);
     return { success: true };
   }
