@@ -439,6 +439,11 @@ export const handleLiveStreamEvents = (
                 LISTEN.SEND_DIAMOND,
                 callback,
                 async ({ id, fullname }: Member) => {
+                     // Validate amount: must be a number and not negative
+                    if (typeof amount !== "number" || Number.isNaN(amount) || amount < 0) {
+                        throw APIError.invalidArgument("Amount must be a non-negative number");
+                    }
+
                     const room = checkRoomExist(roomId);
                     const ids = room.getMemberIds();
                     const message: DiamondMessageDto = { senderId: id, senderFullname: fullname, amount, receiverId, receiverFullname: receiverName, createdAt: new Date() };
