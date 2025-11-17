@@ -12,14 +12,8 @@ import {
 export const createNewDiamondPackage = api(
   { expose: true, auth: true, method: "POST", path: "/diamond-package" },
   async (data: CreateDiamondPackageDto): Promise<CreateDiamondPackageResponse> => {
-    // try {
     const result = await DiamondPackageService.createNewDiamondPackage(data);
     return { success: true, data: result };
-    // } catch (error) {
-    //   throw APIError.aborted(
-    //     error?.toString() || "Error creating new diamond package"
-    //   );
-    // }
   }
 );
 
@@ -29,14 +23,8 @@ export const createNewDiamondPackage = api(
 export const removeDiamondPackage = api(
   { expose: true, auth: true, method: "DELETE", path: "/diamond-package/:id" },
   async ({ id }: { id: string }): Promise<RemoveDiamondPackageResponse> => {
-    // try {
     await DiamondPackageService.removeDiamondPackage(id);
     return { success: true };
-    // } catch (error) {
-    //   throw APIError.aborted(
-    //     error?.toString() || "Error removing diamond package"
-    //   );
-    // }
   }
 );
 
@@ -44,16 +32,10 @@ export const removeDiamondPackage = api(
  *  Method to fetch all diamond package
  */
 export const fetchAllDiamondPackage = api(
-  { expose: true, method: "GET", path: "/diamond-package" },
+  { expose: true, auth: true, method: "GET", path: "/diamond-package" },
   async (): Promise<FetchDiamondPackageListResponse> => {
-    // try {
     const result = await DiamondPackageService.findAllDiamondPackage();
     return { success: true, data: result };
-    // } catch (error) {
-    //   throw APIError.aborted(
-    //     error?.toString() || "Error fetching all diamond package"
-    //   );
-    // }
   }
 );
 

@@ -4,7 +4,7 @@ import { DiamondMetricsResponse } from "./diamond-history.interface";
 
 // API to get diamond metrics
 export const getDiamondMetrics = api(
-    { expose: true, method: "GET", path: "/diamond/metrics" },
+    { expose: true, auth: true, method: "GET", path: "/diamond/metrics" },
     async (): Promise<DiamondMetricsResponse> => {
         const metrics = await DiamondHistoryService.getDiamondMetrics();
         return { success: true, data: metrics };
@@ -13,7 +13,7 @@ export const getDiamondMetrics = api(
 
 // API to get diamond metrics
 export const resetDiamondMetrics = api(
-    { expose: true, method: "DELETE", path: "/diamond/metrics/reset" },
+    { expose: true, auth: true, method: "DELETE", path: "/diamond/metrics/reset" },
     async (): Promise<{success: true}> => {
         await DiamondHistoryService.resetDiamondMetrics();
         return { success: true };

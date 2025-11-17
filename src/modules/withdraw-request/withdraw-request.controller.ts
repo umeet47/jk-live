@@ -4,7 +4,7 @@ import { AllWithdrawRequestListResponse, AllWithdrawRequestListWithExtraDataResp
 
 // API to create a new withdraw request
 export const createWithdrawRequest = api(
-    { expose: true, method: "POST", path: "/withdraw/request" },
+    { expose: true, auth: true, method: "POST", path: "/withdraw/request" },
     async (data: CreateWithdrawRequestDto): Promise<CreateWithdrawRequestResponse> => {
         const request = await WithdrawService.createWithdrawRequest(data);
         return { success: true, data: request };
@@ -13,7 +13,7 @@ export const createWithdrawRequest = api(
 
 // API to update the status of a withdraw request
 export const updateWithdrawRequestStatus = api(
-    { expose: true, method: "PATCH", path: "/withdraw/request/:id/status" },
+    { expose: true, auth: true, method: "PATCH", path: "/withdraw/request/:id/status" },
     async ({ id, status }: { id: string; status: string }): Promise<UpdateWithdrawRequestResponse> => {
         const request = await WithdrawService.updateWithdrawRequestStatus(id, status);
         return { success: true, data: request };
@@ -22,7 +22,7 @@ export const updateWithdrawRequestStatus = api(
 
 // API to get all withdraw requests for a specific user
 export const getUserWithdrawRequests = api(
-    { expose: true, method: "GET", path: "/withdraw/request/user/:userId" },
+    { expose: true, auth: true, method: "GET", path: "/withdraw/request/user/:userId" },
     async ({ userId }: { userId: string }): Promise<AllWithdrawRequestListWithUserResponse> => {
         const requests = await WithdrawService.getUserWithdrawRequests(userId);
         return { success: true, data: requests };
@@ -31,7 +31,7 @@ export const getUserWithdrawRequests = api(
 
 // API to get all pending withdraw requests
 export const getPendingWithdrawRequests = api(
-    { expose: true, method: "GET", path: "/withdraw/request/pending" },
+    { expose: true, auth: true, method: "GET", path: "/withdraw/request/pending" },
     async (): Promise<AllWithdrawRequestListResponse> => {
         const requests = await WithdrawService.getPendingWithdrawRequests();
         return { success: true, data: requests };
@@ -40,7 +40,7 @@ export const getPendingWithdrawRequests = api(
 
 // API to get all accepted or rejected withdraw requests
 export const getWithdrawRequestsByStatus = api(
-    { expose: true, method: "GET", path: "/withdraw/request/status/:status" },
+    { expose: true, auth: true, method: "GET", path: "/withdraw/request/status/:status" },
     async ({ status }: { status: string }): Promise<AllWithdrawRequestListWithExtraDataResponse> => {
         const requests = await WithdrawService.getWithdrawRequestsByStatus(status);
         return { success: true, data: requests };
@@ -49,7 +49,7 @@ export const getWithdrawRequestsByStatus = api(
 
 // API to get total income and total withdrawals for a user
 export const getTotalIncomeAndWithdraw = api(
-    { expose: true, method: "GET", path: "/withdraw/user/:userId/summary" },
+    { expose: true, auth: true, method: "GET", path: "/withdraw/user/:userId/summary" },
     async ({ userId }: { userId: string }): Promise<WithdrawSummaryResponse> => {
         const summary = await WithdrawService.getTotalIncomeAndWithdraw(userId);
         return { success: true, data: summary };

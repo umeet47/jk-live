@@ -4,7 +4,7 @@ import { api } from "encore.dev/api";
 
 // Create a new gift
 export const createGift = api(
-    { expose: true, method: "POST", path: "/gifts" },
+    { expose: true, auth: true, method: "POST", path: "/gifts" },
     async (data: CreateGiftDto): Promise<ISuccessGift> => {
         const gift = await GiftService.createGift(data);
         return { success: true, data: gift };
@@ -13,7 +13,7 @@ export const createGift = api(
 
 // Update an existing gift
 export const updateGift = api(
-    { expose: true, method: "PUT", path: "/gifts/:id" },
+    { expose: true, auth: true, method: "PUT", path: "/gifts/:id" },
     async (data: UpdateGiftDto): Promise<ISuccessGift> => {
         const gift = await GiftService.updateGift(data);
         return { success: true, data: gift };
@@ -22,7 +22,7 @@ export const updateGift = api(
 
 // Delete a gift
 export const deleteGift = api(
-    { expose: true, method: "DELETE", path: "/gifts/:id" },
+    { expose: true, auth: true, method: "DELETE", path: "/gifts/:id" },
     async ({ id }: { id: string }): Promise<{ success: boolean; message: string }> => {
         await GiftService.deleteGift(id);
         return { success: true, message: "Gift deleted successfully" };
@@ -31,7 +31,7 @@ export const deleteGift = api(
 
 // List all gifts
 export const listGifts = api(
-    { expose: true, method: "GET", path: "/gifts" },
+    { expose: true, auth: true, method: "GET", path: "/gifts" },
     async (): Promise<ISuccessGifts> => {
         const gifts = await GiftService.listGifts();
         return {

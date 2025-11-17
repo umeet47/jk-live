@@ -12,7 +12,7 @@ export interface IDiamondSendPercentage {
 
 // API to add a new diamond exchange entry
 export const getDiamondSendPercentage = api(
-    { expose: true, method: "GET", path: "/diamond-send-percentage" },
+    { expose: true, auth: true, method: "GET", path: "/diamond-send-percentage" },
     async (): Promise<{ success: boolean; data: IDiamondSendPercentage }> => {
         const exchange = await DiamondSendPercentageService.findOne();
         return { success: true, data: exchange };
@@ -22,7 +22,7 @@ export const getDiamondSendPercentage = api(
 
 // API to add a new diamond exchange entry
 export const updateDiamondSendPercentage = api(
-    { expose: true, method: "PATCH", path: "/diamond-send-percentage/update" },
+    { expose: true, auth: true, method: "PATCH", path: "/diamond-send-percentage/update" },
     async (data: UpdateDiamondSendPercentageDto): Promise<{ success: boolean; data: IDiamondSendPercentage }> => {
         const exchange = await DiamondSendPercentageService.update(data);
         return { success: true, data: exchange };

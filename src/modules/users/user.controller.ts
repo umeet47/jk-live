@@ -24,15 +24,11 @@ import { seedAdminUser } from "../../../prisma/seed";
 export const googleApi = api(
   { expose: true, method: "POST", path: "/v6/google/login" },
   async (data: GoogleDto): Promise<UserLoginResponse> => {
-    // try {
     if (!data.token || typeof data.token !== "string") {
       throw APIError.unauthenticated("Invalid token");
     }
     const result = await UserService.googleLogin(data);
     return result;
-    // } catch (error) {
-    //   throw APIError.unauthenticated(error?.toString() || "Invalid token");
-    // }
   }
 );
 
@@ -42,15 +38,11 @@ export const googleApi = api(
 export const create = api(
   { expose: true, method: "POST", path: "/users" },
   async ({ data }: { data: CreateUserDto }): Promise<UserResponse> => {
-    // try {
     if (!data.fullname || !data.email) {
       throw APIError.invalidArgument("Missing fields");
     }
     const result = await UserService.create(data);
     return { success: true, result };
-    // } catch (error) {
-    //   throw APIError.aborted(error?.toString() || "Error creating the user");
-    // }
   }
 );
 
@@ -60,15 +52,11 @@ export const create = api(
 export const createAdmin = api(
   { expose: true, method: "POST", path: "/users/admin" },
   async ({ data }: { data: CreateUserDto }): Promise<UserResponse> => {
-    // try {
     if (!data.fullname || !data.email) {
       throw APIError.invalidArgument("Missing fields");
     }
     const result = await UserService.createAdmin(data);
     return { success: true, result };
-    // } catch (error) {
-    //   throw APIError.aborted(error?.toString() || "Error creating the admin");
-    // }
   }
 );
 
@@ -127,18 +115,8 @@ export const count = api(
  * Get all users data
  */
 export const read = api(
-  {
-    expose: true,
-    //  auth: true,
-    method: "GET", path: "/users"
-  },
-  async (data: {
-    page?: number;
-    limit?: number;
-  }): Promise<{
-    success: boolean;
-    result: UserDto[];
-  }> => {
+  { expose: true, auth: true, method: "GET", path: "/users" },
+  async (data: { page?: number; limit?: number; }): Promise<{ success: boolean; result: UserDto[]; }> => {
     const { result } = await UserService.find(data);
     return { success: true, result };
   }
@@ -148,11 +126,7 @@ export const read = api(
  * Get user data by id
  */
 export const readOne = api(
-  {
-    expose: true,
-    //  auth: true,
-    method: "GET", path: "/v6/users/:id"
-  },
+  { expose: true, auth: true, method: "GET", path: "/v6/users/:id" },
   async ({ id }: { id: string }): Promise<UserWithActiveDataAndDevicesResponse> => {
     const result = await UserService.findOneWithActiveData(id);
     return {
@@ -240,7 +214,7 @@ export const removeDiamond = api(
  * Counts and returns the number of existing users
  */
 export const tempUserUpdate = api(
-  { expose: true, method: "GET", path: "/temp/users/:email" },
+  { expose: true, auth: true, method: "GET", path: "/temp/users/:email" },
   async ({ email }: { email: string }): Promise<{ success: boolean; }> => {
     await UserService.tempUpdateDiamondByEmail(email);
     return { success: true, };
@@ -266,7 +240,7 @@ export const tempUserUpdate = api(
 
 // API to update the regNumber of a user
 export const updateRegNumber = api(
-  { expose: true, method: "PATCH", path: "/user/:userId/reg-number" },
+  { expose: true, auth: true, method: "PATCH", path: "/user/:userId/reg-number" },
   async ({ userId, newRegNumber }: { userId: string; newRegNumber: number }): Promise<UpdateRegNoResponse> => {
     const updatedUser = await UserService.updateRegNumber(userId, newRegNumber);
     return { success: true, data: updatedUser };
@@ -275,7 +249,7 @@ export const updateRegNumber = api(
 
 // API to list all conversation user of given registration number user
 export const fetchAllConversationListOfGivenRegNo = api(
-  { expose: true, method: "GET", path: "/users/conversation-list/:regNo" },
+  { expose: true, auth: true, method: "GET", path: "/users/conversation-list/:regNo" },
   async ({ regNo }: { regNo: number; }): Promise<IFetchAllConversationListResponse> => {
     const data = await UserService.fetchAllConversationListOfGivenRegNo(regNo);
     return {
@@ -287,7 +261,7 @@ export const fetchAllConversationListOfGivenRegNo = api(
 
 // API to list top 5 gifter
 export const fetchTopFiveGifter = api(
-  { expose: true, method: "GET", path: "/users/top-five/gifter" },
+  { expose: true, auth: true, method: "GET", path: "/users/top-five/gifter" },
   async (): Promise<TopFiveGifterResponse> => {
     const data = await UserService.fetchTopFiveGifter();
     return { success: true, data };
@@ -297,7 +271,7 @@ export const fetchTopFiveGifter = api(
 // API to create an admin user
 // This is a one-time operation to seed the admin user
 export const createAdminUser = api(
-  { expose: true, method: "GET", path: "/admin/user/create" },
+  { expose: true, auth: true, method: "GET", path: "/admin/user/create" },
   async (): Promise<{ success: true }> => {
     await seedAdminUser()
     return { success: true };
@@ -308,7 +282,7 @@ export const createAdminUser = api(
 
 // API to remove purchase
 export const removePurchase = api(
-  { expose: true, method: "DELETE", path: "/admin/remove-purchase/:userId/:name" },
+  { expose: true, auth: true, method: "DELETE", path: "/admin/remove-purchase/:userId/:name" },
   async (data: { userId: string, name: string }): Promise<{ success: true }> => {
     await UserService.removePurchase(
       data.userId,
@@ -320,7 +294,7 @@ export const removePurchase = api(
 
 // API to transfer diamond from one user to another
 export const transferDiamond = api(
-  { expose: true, method: "PATCH", path: "/admin/transfer-diamond" },
+  { expose: true, auth: true, method: "PATCH", path: "/admin/transfer-diamond" },
   async (data: { fromUserId: string, toUserId: string, diamond: number }): Promise<{ success: true }> => {
     // Validate amount: must be a number and not negative
     if (typeof data.diamond !== "number" || Number.isNaN(data.diamond) || data.diamond < 0) {
@@ -333,7 +307,7 @@ export const transferDiamond = api(
 
 // status ="add" | "subtract"
 export const addRemoveDiamondFromOrToUserWithoutHistory = api(
-  { expose: true, method: "PATCH", path: "/add-remove-diamond/:status/:userId" },
+  { expose: true, auth: true, method: "PATCH", path: "/add-remove-diamond/:status/:userId" },
   async (data: { userId: string, diamond: number, status: string }): Promise<{
     success: true
   }> => {

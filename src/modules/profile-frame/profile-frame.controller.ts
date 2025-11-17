@@ -29,7 +29,7 @@ export const removeProfileFrame = api(
  * Method to fetch list of profile frame
  */
 export const fetchAllProfileFrame = api(
-  { expose: true, method: "GET", path: "/profile-frames" },
+  { expose: true, auth: true, method: "GET", path: "/profile-frames" },
   async (): Promise<ProfileFrameListResponse> => {
     const result = await ProfileFrameService.fetchAllProfileFrame();
     return { success: true, data: result };
@@ -45,7 +45,8 @@ interface BuyProfileFrameResponse {
   success: boolean;
   data: UserDto
 }
-export const buyProfileFrame = api({ expose: true, method: "POST", path: "/profile-frames/buy" },
+export const buyProfileFrame = api(
+  { expose: true, auth: true, method: "POST", path: "/profile-frames/buy" },
   async ({ profileFrameId, userId }: BuyProfileFrameDto): Promise<BuyProfileFrameResponse> => {
     const response = await ProfileFrameService.buyProfileFrame(profileFrameId, userId);
     return { success: true, data: response };

@@ -4,7 +4,7 @@ import { MakeAgentDto, RemoveAgentDto, SuccessMessage, SuccessMessageWithAgent, 
 
 // Make a user an agent
 export const makeAgent = api(
-    { expose: true, method: "POST", path: "/agents/make" },
+    { expose: true, auth: true, method: "POST", path: "/agents/make" },
     async (data: MakeAgentDto): Promise<SuccessMessage> => {
         await AgentService.makeAgent(data.regNo);
         return { success: true, message: "User is now an agent" };
@@ -13,7 +13,7 @@ export const makeAgent = api(
 
 // Remove an agent
 export const removeAgent = api(
-    { method: "POST", path: "/agents/remove" },
+    { expose: true, auth: true, method: "POST", path: "/agents/remove" },
     async (data: RemoveAgentDto): Promise<SuccessMessage> => {
         await AgentService.removeAgent(data.regNo);
         return { success: true, message: "User is no longer an agent" };
@@ -22,7 +22,7 @@ export const removeAgent = api(
 
 // List all agents
 export const listAgents = api(
-    { method: "GET", path: "/agents" },
+    { expose: true, auth: true, method: "GET", path: "/agents" },
     async (): Promise<SuccessMessageWithAgent> => {
         const agents = await AgentService.listAgents();
         return {
@@ -36,13 +36,9 @@ export const listAgents = api(
 
 // API to get the list of agents with their total diamond count
 export const getAgentsWithTotalDiamonds = api(
-    { expose: true, method: "GET", path: "/agents/diamonds" },
+    { expose: true, auth: true, method: "GET", path: "/agents/diamonds" },
     async (): Promise<SuccessMessageWithAgentAndTotalDiamond> => {
-        // try {
         const agents = await AgentService.getAgentsWithTotalDiamonds();
         return { success: true, data: agents };
-        // } catch (error) {
-        //     throw new Error(error?.toString() || "Error fetching agent list.");
-        // }
     }
 );

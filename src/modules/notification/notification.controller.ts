@@ -4,7 +4,7 @@ import { NotificationDto } from "./notification.interface";
 
 // API to create and send a notification
 export const createAndSendNotification = api(
-    { expose: true, method: "POST", path: "/notifications/send" },
+    { expose: true, auth: true, method: "POST", path: "/notifications/send" },
     async (data: NotificationDto): Promise<{ success: boolean; message: string; }> => {
         await NotificationService.createAndSendNotification(data);
         return { success: true, message: "Notification sent successfully." };
@@ -13,7 +13,7 @@ export const createAndSendNotification = api(
 
 //API to delete a notification by ID
 export const deleteNotificationById = api(
-    { expose: true, method: "DELETE", path: "/notifications/:id" },
+    { expose: true, auth: true, method: "DELETE", path: "/notifications/:id" },
     async ({ id }: { id: string }): Promise<{ success: boolean; message: string }> => {
         await NotificationService.deleteNotificationById(id);
         return { success: true, message: "Notification deleted successfully." };
@@ -22,7 +22,7 @@ export const deleteNotificationById = api(
 
 // API to fetch all active notifications
 export const getAllActiveNotifications = api(
-    { expose: true, method: "GET", path: "/notifications/active" },
+    { expose: true, auth: true, method: "GET", path: "/notifications/active" },
     async (): Promise<{
         success: boolean; data: {
             id: string;

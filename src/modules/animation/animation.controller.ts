@@ -13,14 +13,8 @@ import { UserDto } from "../users/user.interface";
 export const createAnimation = api(
   { expose: true, auth: true, method: "POST", path: "/animations" },
   async (data: CreateAnimationDto): Promise<AnimationResponse> => {
-    // try {
     const result = await AnimationService.createAnimation(data);
     return { success: true, result };
-    // } catch (error) {
-    //   throw APIError.aborted(
-    //     error?.toString() || "Error creating the animation"
-    //   );
-    // }
   }
 );
 
@@ -53,14 +47,8 @@ export const createAnimation = api(
 export const removeAnimation = api(
   { expose: true, auth: true, method: "DELETE", path: "/animations/:id" },
   async ({ id }: { id: string }): Promise<{ success: boolean }> => {
-    // try {
     await AnimationService.removeAnimation(id);
     return { success: true };
-    // } catch (error) {
-    //   throw APIError.aborted(
-    //     error?.toString() || "Error removing the animation"
-    //   );
-    // }
   }
 );
 
@@ -68,16 +56,10 @@ export const removeAnimation = api(
  * Method to fetch list of animation
  */
 export const fetchAllAnimation = api(
-  { expose: true, method: "GET", path: "/animations" },
+  { expose: true, auth: true, method: "GET", path: "/animations" },
   async (): Promise<AnimationListResponse> => {
-    // try {
     const result = await AnimationService.fetchAllAnimation();
     return { success: true, result };
-    // } catch (error) {
-    //   throw APIError.aborted(
-    //     error?.toString() || "Error fetching list of the animation"
-    //   );
-    // }
   }
 );
 
@@ -90,14 +72,9 @@ interface BuyAnimationResponse {
   success: boolean;
   data: UserDto
 }
-export const buyProfileFrame = api({ expose: true, method: "POST", path: "/animations/buy" },
+export const buyProfileFrame = api(
+  { expose: true, auth: true, method: "POST", path: "/animations/buy" },
   async ({ animationId, userId }: BuyAnimationDto): Promise<BuyAnimationResponse> => {
-    // try {
     const response = await AnimationService.buyAnimation(animationId, userId);
     return { success: true, data: response };
-    // } catch (error) {
-    //   throw APIError.aborted(
-    //     error?.toString() || "Error buy animation"
-    //   );
-    // }
   })
