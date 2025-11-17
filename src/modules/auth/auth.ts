@@ -13,6 +13,8 @@ interface AuthData {
   userID: string;
   role: string;
   accountType: string;
+  isReseller: boolean;
+  deviceId: string | null;
 }
 
 export const myAuthHandler = authHandler(
@@ -29,7 +31,11 @@ export const myAuthHandler = authHandler(
       const user = await UserService.findOne(userID);
       const role = user.role;
       const accountType = user.accountType;
-      return { userID, role, accountType };
+      const deviceId = user.deviceId
+      if (!deviceId) {
+        throw APIError.unauthenticated("Device id not found")
+      }
+      return { userID, role, accountType, isReseller: user.isReseller, deviceId: user.deviceId };
     } catch (e) {
       log.error(`Error while authenticating Error: ${e}`);
       throw APIError.unauthenticated(

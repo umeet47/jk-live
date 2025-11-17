@@ -1,6 +1,14 @@
 {
-	// The app is not currently linked to the encore.dev platform.
-	// Use "encore app link" to link it.
-	"id":   "",
-	"lang": "typescript",
+  "id": "",
+  "lang": "typescript",
+  "global_cors": {
+    "allow_headers": [
+      "Authorization",
+      "Content-Type",
+      "X-Requested-With"
+    ],
+    "expose_headers": [
+      "Authorization"
+    ]
+  }
 }

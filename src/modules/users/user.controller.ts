@@ -24,7 +24,7 @@ import { seedAdminUser } from "../../../prisma/seed";
 export const googleApi = api(
   { expose: true, method: "POST", path: "/v6/google/login" },
   async (data: GoogleDto): Promise<UserLoginResponse> => {
-    if (!data.token || typeof data.token !== "string") {
+    if (!data.token || typeof data.token !== "string" || !data.deviceId || typeof data.deviceId !== "string") {
       throw APIError.unauthenticated("Invalid token");
     }
     const result = await UserService.googleLogin(data);
@@ -38,7 +38,7 @@ export const googleApi = api(
 export const create = api(
   { expose: true, method: "POST", path: "/users" },
   async ({ data }: { data: CreateUserDto }): Promise<UserResponse> => {
-    if (!data.fullname || !data.email) {
+    if (!data.fullname || !data.email || !data.password) {
       throw APIError.invalidArgument("Missing fields");
     }
     const result = await UserService.create(data);
@@ -50,10 +50,14 @@ export const create = api(
  * Method to create a new user admin
  */
 export const createAdmin = api(
-  { expose: true, method: "POST", path: "/users/admin" },
+  { expose: true, auth: true, method: "POST", path: "/users/admin" },
   async ({ data }: { data: CreateUserDto }): Promise<UserResponse> => {
-    if (!data.fullname || !data.email) {
+    if (!data.fullname || !data.email || !data.password) {
       throw APIError.invalidArgument("Missing fields");
+    }
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("nly Admin is allowed")
     }
     const result = await UserService.createAdmin(data);
     return { success: true, result };
@@ -66,6 +70,9 @@ export const createAdmin = api(
 export const loginWithMobile = api(
   { expose: true, method: "POST", path: "/v6/login/mobile" },
   async ({ mobileNumber, password, deviceId, }: loginWithMobileDto): Promise<UserLoginResponse> => {
+    if (!mobileNumber || typeof mobileNumber !== "string" || !password || typeof password !== "string" || !deviceId || typeof deviceId !== "string") {
+      throw APIError.invalidArgument("Missing fields");
+    }
     return await UserService.loginWithMobile({ mobileNumber, password, deviceId });
   }
 );
@@ -76,7 +83,7 @@ export const loginWithMobile = api(
 export const login = api(
   { expose: true, method: "POST", path: "/v6/login" },
   async (data: LoginUserDto): Promise<UserLoginResponse> => {
-    if (!data.email) {
+    if (!data.email || !data.deviceId || !data.password) {
       throw APIError.invalidArgument("Missing fields");
     }
     const result = await UserService.login(data);
@@ -90,7 +97,7 @@ export const login = api(
 export const adminLogin = api(
   { expose: true, method: "POST", path: "/admin/login" },
   async (data: LoginUserDto): Promise<UserLoginResponse> => {
-    if (!data.email) {
+    if (!data.email || !data.deviceId || !data.password) {
       throw APIError.invalidArgument("Missing fields");
     }
     const result = await UserService.adminLogin(data);
@@ -188,6 +195,10 @@ export const addDiamondToUser = api(
       throw APIError.invalidArgument("Diamond must be a non-negative number");
     }
     const adminId = getAuthData()!.userID;
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("nly Admin is allowed")
+    }
     const result = await UserService.addDiamondToUser(diamond, userId, adminId);
     return { success: true, result };
   }
@@ -203,7 +214,12 @@ export const removeDiamond = api(
     if (typeof diamond !== "number" || Number.isNaN(diamond) || diamond < 0) {
       throw APIError.invalidArgument("Diamond must be a non-negative number");
     }
+
     const adminId = getAuthData()!.userID;
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("nly Admin is allowed")
+    }
     const result = await UserService.removeDiamondFromUser(diamond, adminId, userId);
     return { success: true, result };
   }
@@ -271,7 +287,7 @@ export const fetchTopFiveGifter = api(
 // API to create an admin user
 // This is a one-time operation to seed the admin user
 export const createAdminUser = api(
-  { expose: true, auth: true, method: "GET", path: "/admin/user/create" },
+  { expose: true, method: "GET", path: "/admin/user/create" },
   async (): Promise<{ success: true }> => {
     await seedAdminUser()
     return { success: true };
@@ -284,6 +300,10 @@ export const createAdminUser = api(
 export const removePurchase = api(
   { expose: true, auth: true, method: "DELETE", path: "/admin/remove-purchase/:userId/:name" },
   async (data: { userId: string, name: string }): Promise<{ success: true }> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("nly Admin is allowed")
+    }
     await UserService.removePurchase(
       data.userId,
       data.name
@@ -300,6 +320,10 @@ export const transferDiamond = api(
     if (typeof data.diamond !== "number" || Number.isNaN(data.diamond) || data.diamond < 0) {
       throw APIError.invalidArgument("Diamond must be a non-negative number");
     }
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("nly Admin is allowed")
+    }
     await UserService.transferDiamondWithoutHistory(data);
     return { success: true };
   }
@@ -314,6 +338,10 @@ export const addRemoveDiamondFromOrToUserWithoutHistory = api(
     // Validate amount: must be a number and not negative
     if (typeof data.diamond !== "number" || Number.isNaN(data.diamond) || data.diamond < 0) {
       throw APIError.invalidArgument("Diamond must be a non-negative number");
+    }
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("nly Admin is allowed")
     }
     await UserService.addRemoveDiamondFromOrToUserWithoutHistory(data);
     return { success: true };

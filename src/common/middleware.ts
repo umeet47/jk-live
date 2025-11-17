@@ -14,6 +14,10 @@ export const socketMiddleware = async (
     const userID = verifyAccessToken(token);
     if (!userID) throw APIError.permissionDenied("unauthorized");
     const user = await UserService.findOne(userID);
+    const deviceId = user.deviceId
+    if (!deviceId) {
+      throw APIError.unauthenticated("Device id not found")
+    }
     const data: Member = {
       id: user.id,
       fullname: user.fullname,
