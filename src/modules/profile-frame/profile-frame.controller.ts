@@ -1,7 +1,8 @@
-import { api } from "encore.dev/api";
-import ProfileFrameService from "./profile-frame.service";
-import { CreateProfileFrameDto, ProfileFrameListResponse, ProfileFrameResponse } from "./profile-frame.interface";
+import { api, APIError } from "encore.dev/api";
+import { getAuthData } from "~encore/auth";
 import { UserDto } from "../users/user.interface";
+import { CreateProfileFrameDto, ProfileFrameListResponse, ProfileFrameResponse } from "./profile-frame.interface";
+import ProfileFrameService from "./profile-frame.service";
 
 /**
  * Method to create a new profile frame by admin
@@ -9,6 +10,10 @@ import { UserDto } from "../users/user.interface";
 export const createProfileFrame = api(
   { expose: true, auth: true, method: "POST", path: "/profile-frames" },
   async (data: CreateProfileFrameDto): Promise<ProfileFrameResponse> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("Only Admin is allowed")
+    }
     const result = await ProfileFrameService.createProfileFrame(data);
     return { success: true, data: result };
   }
@@ -20,6 +25,10 @@ export const createProfileFrame = api(
 export const removeProfileFrame = api(
   { expose: true, auth: true, method: "DELETE", path: "/profile-frames/:id" },
   async ({ id }: { id: string }): Promise<{ success: boolean }> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("Only Admin is allowed")
+    }
     await ProfileFrameService.removeProfileFrame(id);
     return { success: true };
   }

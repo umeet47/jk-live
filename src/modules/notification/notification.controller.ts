@@ -1,6 +1,6 @@
 import { api } from "encore.dev/api";
-import NotificationService from "./notification.service";
 import { NotificationDto } from "./notification.interface";
+import NotificationService from "./notification.service";
 
 // API to create and send a notification
 export const createAndSendNotification = api(

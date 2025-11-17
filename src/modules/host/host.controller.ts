@@ -1,5 +1,4 @@
 import { api } from "encore.dev/api";
-import HostService from "./host.service";
 import {
     HostRequestDto,
     LeaveAgentDto,
@@ -9,6 +8,7 @@ import {
     SuccessRequest,
     UpdateHostRequestDto
 } from "./host.interface";
+import HostService from "./host.service";
 
 // Create a host request
 export const createHostRequest = api(

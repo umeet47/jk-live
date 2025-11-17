@@ -1,6 +1,6 @@
 import { api } from "encore.dev/api";
-import FollowService from "./follow.service";
 import { SuccessFollowedResponse, SuccessFollowerResponse, SuccessFollowResponse, SuccessUnfollowResponse } from "./follow.interface";
+import FollowService from "./follow.service";
 
 // API to follow a user
 export const followUser = api(

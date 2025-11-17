@@ -1,6 +1,6 @@
 import { api } from "encore.dev/api";
-import LiveStreamParticipantService from "./livestream-participant.service";
 import { SuccessAllLiveStreamParticipant, SuccessAllLiveStreamParticipantDuration, SuccessLiveStreamParticipantDurationForGivenParticipant, SuccessLiveStreamParticipantForGivenParticipant } from "./livestream-participant.interface";
+import LiveStreamParticipantService from "./livestream-participant.service";
 
 // Get all live stream durations
 export const getAllLiveStreamsDurationPerDay = api(

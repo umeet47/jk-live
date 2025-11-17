@@ -1,4 +1,5 @@
-import { api } from "encore.dev/api";
+import { api, APIError } from "encore.dev/api";
+import { getAuthData } from "~encore/auth";
 import DeviceService from "./device.service";
 
 // API to handle device during login
@@ -23,6 +24,10 @@ export interface UnblockSuccessResponse {
 export const blockDevice = api(
     { expose: true, auth: true, method: "PATCH", path: "/devices/block/:deviceId" },
     async ({ deviceId }: { deviceId: string }): Promise<BlockSuccessResponse> => {
+        const role = getAuthData()!.role
+        if (role !== "ADMIN") {
+            throw APIError.permissionDenied("Only Admin is allowed")
+        }
         return await DeviceService.blockDevice(deviceId);
     }
 );
@@ -31,6 +36,10 @@ export const blockDevice = api(
 export const unblockDevice = api(
     { expose: true, auth: true, method: "PATCH", path: "/devices/unblock/:deviceId" },
     async ({ deviceId }: { deviceId: string }): Promise<UnblockSuccessResponse> => {
+        const role = getAuthData()!.role
+        if (role !== "ADMIN") {
+            throw APIError.permissionDenied("Only Admin is allowed")
+        }
         return await DeviceService.unblockDevice(deviceId);
     }
 );

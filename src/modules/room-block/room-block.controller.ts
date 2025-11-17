@@ -1,7 +1,7 @@
 import { api } from "encore.dev/api";
-import RoomBlockService from "./room-block.service";
 import { getAuthData } from "~encore/auth";
 import { UserDto } from "../users/user.interface";
+import RoomBlockService from "./room-block.service";
 
 /**
  * Method to List all room blocks for a given blockerId.

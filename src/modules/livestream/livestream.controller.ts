@@ -1,11 +1,11 @@
 import { api } from "encore.dev/api";
-import LiveStreamService from "./livestream.service";
+import { UserWithTotalDuration } from "../users/user.interface";
 import {
     SuccessAllLiveStream,
     SuccessAllLiveStreamDuration,
     SuccessDailyStream
 } from "./livestream.interface";
-import { UserWithTotalDuration } from "../users/user.interface";
+import LiveStreamService from "./livestream.service";
 
 // RESET LIVESTREAM DATA BY SUPER ADMIN
 export const resetLiveStreamData = api(

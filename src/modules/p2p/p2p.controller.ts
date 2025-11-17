@@ -1,6 +1,6 @@
 import { api } from "encore.dev/api";
-import P2PMessageService from "./p2p.service";
 import { MessageHistory } from "../realtime/interfaces/p2p-call.interface";
+import P2PMessageService from "./p2p.service";
 
 // API to clear chat history with a specific user
 export const clearChatHistory = api(

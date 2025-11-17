@@ -1,17 +1,22 @@
-import { api } from "encore.dev/api";
-import DiamondPackageService from "./diamond-package.service";
+import { api, APIError } from "encore.dev/api";
+import { getAuthData } from "~encore/auth";
 import {
   CreateDiamondPackageDto,
   CreateDiamondPackageResponse,
   FetchDiamondPackageListResponse,
   RemoveDiamondPackageResponse
 } from "./diamond-package.interface";
+import DiamondPackageService from "./diamond-package.service";
 /**
  *  Method to create new diamond package
  */
 export const createNewDiamondPackage = api(
   { expose: true, auth: true, method: "POST", path: "/diamond-package" },
   async (data: CreateDiamondPackageDto): Promise<CreateDiamondPackageResponse> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("Only Admin is allowed")
+    }
     const result = await DiamondPackageService.createNewDiamondPackage(data);
     return { success: true, data: result };
   }
@@ -23,6 +28,10 @@ export const createNewDiamondPackage = api(
 export const removeDiamondPackage = api(
   { expose: true, auth: true, method: "DELETE", path: "/diamond-package/:id" },
   async ({ id }: { id: string }): Promise<RemoveDiamondPackageResponse> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("Only Admin is allowed")
+    }
     await DiamondPackageService.removeDiamondPackage(id);
     return { success: true };
   }

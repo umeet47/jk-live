@@ -1,11 +1,16 @@
-import { api } from "encore.dev/api";
-import DiamondExchangeService from "./diamond-exchange.service";
+import { api, APIError } from "encore.dev/api";
+import { getAuthData } from "~encore/auth";
 import { AddDiamondExchangeDto, AddDiamondExchangeResponse, DiamondExchangeListResponse, RemoveDiamondExchangeResponse } from "./diamond-exchange.interface";
+import DiamondExchangeService from "./diamond-exchange.service";
 
 // API to add a new diamond exchange entry
 export const addDiamondExchange = api(
     { expose: true, auth: true, method: "POST", path: "/diamond-exchange/add" },
     async ({ diamond, amount }: AddDiamondExchangeDto): Promise<AddDiamondExchangeResponse> => {
+        const role = getAuthData()!.role
+        if (role !== "ADMIN") {
+            throw APIError.permissionDenied("Only Admin is allowed")
+        }
         const exchange = await DiamondExchangeService.addDiamondExchange(diamond, amount);
         return { success: true, data: exchange };
     }
@@ -15,6 +20,10 @@ export const addDiamondExchange = api(
 export const removeDiamondExchange = api(
     { expose: true, auth: true, method: "DELETE", path: "/diamond-exchange/remove/:id" },
     async ({ id }: { id: string }): Promise<RemoveDiamondExchangeResponse> => {
+        const role = getAuthData()!.role
+        if (role !== "ADMIN") {
+            throw APIError.permissionDenied("Only Admin is allowed")
+        }
         const exchange = await DiamondExchangeService.removeDiamondExchange(id);
         return { success: true, data: exchange };
     }

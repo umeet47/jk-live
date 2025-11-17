@@ -1,4 +1,5 @@
-import { api } from "encore.dev/api";
+import { api, APIError } from "encore.dev/api";
+import { getAuthData } from "~encore/auth";
 import {
   BuyVipSubPackageResponse,
   CreateVipPackageDto,
@@ -18,6 +19,10 @@ import VipPackageService from "./vip-package.service";
 export const createVipPackage = api(
   { expose: true, auth: true, method: "POST", path: "/vip-package" },
   async (data: CreateVipPackageDto): Promise<VipPackageResponse> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("Only Admin is allowed")
+    }
     const result = await VipPackageService.createVipPackage(data);
     return { success: true, result };
   }
@@ -29,14 +34,12 @@ export const createVipPackage = api(
 export const updateVipPackage = api(
   { expose: true, auth: true, method: "PATCH", path: "/vip-package" },
   async ({ id, ...data }: { id: string } & UpdateVipPackageDto): Promise<VipPackageResponse> => {
-    // try {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("Only Admin is allowed")
+    }
     const result = await VipPackageService.updateVipPackage(id, data);
     return { success: true, result };
-    // } catch (error) {
-    //   throw APIError.aborted(
-    //     error?.toString() || "Error updating existing vip package"
-    //   );
-    // }
   }
 );
 
@@ -46,6 +49,10 @@ export const updateVipPackage = api(
 export const removeVipPackage = api(
   { expose: true, auth: true, method: "DELETE", path: "/vip-package/:id" },
   async ({ id }: { id: string }): Promise<VipPackageResponse> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("Only Admin is allowed")
+    }
     await VipPackageService.removeVipPackage(id);
     return { success: true };
   }
@@ -79,6 +86,10 @@ export const fetchAll = api(
 export const createVipSubPackage = api(
   { expose: true, auth: true, method: "POST", path: "/vip-subpackage" },
   async (data: CreateVipSubPackageDto): Promise<VipSubPackageResponse> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("Only Admin is allowed")
+    }
     const result = await VipPackageService.createVipSubPackage(data);
     return { success: true, result };
   }
@@ -88,6 +99,10 @@ export const createVipSubPackage = api(
 export const updateVipSubPackage = api(
   { expose: true, auth: true, method: "PATCH", path: "/vip-subpackage/:id" },
   async ({ id, ...data }: { id: string } & UpdateVipSubPackageDto): Promise<VipSubPackageResponse> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("Only Admin is allowed")
+    }
     const result = await VipPackageService.updateVipSubPackage(id, data);
     return { success: true, result };
   }
@@ -97,6 +112,10 @@ export const updateVipSubPackage = api(
 export const deleteVipSubPackage = api(
   { expose: true, auth: true, method: "DELETE", path: "/vip-subpackage/:id" },
   async ({ id }: { id: string }): Promise<{ success: boolean }> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("Only Admin is allowed")
+    }
     await VipPackageService.deleteVipSubPackage(id);
     return { success: true };
   }

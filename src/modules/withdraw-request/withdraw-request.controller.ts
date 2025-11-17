@@ -1,6 +1,6 @@
 import { api } from "encore.dev/api";
-import WithdrawService from "./withdraw-request.service";
 import { AllWithdrawRequestListResponse, AllWithdrawRequestListWithExtraDataResponse, AllWithdrawRequestListWithUserResponse, CreateWithdrawRequestDto, CreateWithdrawRequestResponse, UpdateWithdrawRequestResponse, WithdrawSummaryResponse } from "./withdraw-request.interface";
+import WithdrawService from "./withdraw-request.service";
 
 // API to create a new withdraw request
 export const createWithdrawRequest = api(

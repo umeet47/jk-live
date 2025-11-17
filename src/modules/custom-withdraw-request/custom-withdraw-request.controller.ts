@@ -1,4 +1,5 @@
-import { api } from "encore.dev/api";
+import { api, APIError } from "encore.dev/api";
+import { getAuthData } from "~encore/auth";
 import { AllCustomWithdrawRequestListResponse, CreateCustomWithdrawRequestDto, CreateCustomWithdrawRequestResponse, UpdateCustomWithdrawRequestResponse } from "./custom-withdraw-request.interface";
 import CustomWithdrawService from "./custom-withdraw-request.service";
 
@@ -15,6 +16,10 @@ export const createCustomWithdrawRequest = api(
 export const updateCustomWithdrawRequestStatus = api(
     { expose: true, auth: true, method: "PATCH", path: "/custom-withdraw/request/:id/status" },
     async ({ id, status }: { id: string; status: string }): Promise<UpdateCustomWithdrawRequestResponse> => {
+        const role = getAuthData()!.role
+        if (role !== "ADMIN") {
+            throw APIError.permissionDenied("Only Admin is allowed")
+        }
         const request = await CustomWithdrawService.updateCustomWithdrawRequestStatus(id, status);
         return { success: true, data: request };
     }

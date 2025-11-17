@@ -1,11 +1,12 @@
-import { api } from "encore.dev/api";
+import { api, APIError } from "encore.dev/api";
+import { getAuthData } from "~encore/auth";
+import { UserDto } from "../users/user.interface";
 import {
   AnimationListResponse,
   AnimationResponse,
   CreateAnimationDto,
 } from "./animation.interface";
 import AnimationService from "./animation.service";
-import { UserDto } from "../users/user.interface";
 
 /**
  * Method to create a new animation by admin
@@ -13,6 +14,10 @@ import { UserDto } from "../users/user.interface";
 export const createAnimation = api(
   { expose: true, auth: true, method: "POST", path: "/animations" },
   async (data: CreateAnimationDto): Promise<AnimationResponse> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("nly Admin is allowed")
+    }
     const result = await AnimationService.createAnimation(data);
     return { success: true, result };
   }
@@ -31,6 +36,10 @@ export const createAnimation = api(
 //     id: string;
 //   }): Promise<AnimationResponse> => {
 //     try {
+// const role = getAuthData()!.role
+//     if (role !== "ADMIN") {
+//       throw APIError.permissionDenied("Only Admin is allowed")
+//     }
 //       const result = await AnimationService.updateAnimation(data, id);
 //       return { success: true, result };
 //     } catch (error) {
@@ -47,6 +56,10 @@ export const createAnimation = api(
 export const removeAnimation = api(
   { expose: true, auth: true, method: "DELETE", path: "/animations/:id" },
   async ({ id }: { id: string }): Promise<{ success: boolean }> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("Only Admin is allowed")
+    }
     await AnimationService.removeAnimation(id);
     return { success: true };
   }

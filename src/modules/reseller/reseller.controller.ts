@@ -1,7 +1,7 @@
 import { api, APIError } from "encore.dev/api";
-import ResellerService from "./reseller.service";
-import { ResellerTransferDiamondDto, SuccessResellerCreatedResponse, SuccessResellerRemovedResponse, SuccessResellersListResponse, SuccessResellerTransferDiamondResponse, SuccessResellerTransferHistoryListResponse } from "./reseller.interface";
 import { getAuthData } from "~encore/auth";
+import { ResellerTransferDiamondDto, SuccessResellerCreatedResponse, SuccessResellerRemovedResponse, SuccessResellersListResponse, SuccessResellerTransferDiamondResponse, SuccessResellerTransferHistoryListResponse } from "./reseller.interface";
+import ResellerService from "./reseller.service";
 
 // API to make a user a reseller
 export const makeReseller = api(
@@ -33,6 +33,10 @@ export const removeReseller = api(
 export const listResellers = api(
     { expose: true, auth: true, method: "GET", path: "/reseller/list" },
     async (): Promise<SuccessResellersListResponse> => {
+        const role = getAuthData()!.role
+        if (role !== "ADMIN") {
+            throw APIError.permissionDenied("Only Admin is allowed")
+        }
         const resellers = await ResellerService.listResellers();
         return { success: true, data: resellers };
     }

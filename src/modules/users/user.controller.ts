@@ -1,22 +1,22 @@
 import { api, APIError } from "encore.dev/api";
-import {
-  CreateUserDto,
-  UpdateUserDto,
-  UserResponse,
-  LoginUserDto,
-  UserLoginResponse,
-  UserDto,
-  GoogleDto,
-  UpdateRegNoResponse,
-  UserWithActiveDataResponse,
-  TopFiveGifterResponse,
-  IFetchAllConversationListResponse,
-  loginWithMobileDto,
-  UserWithActiveDataAndDevicesResponse,
-} from "./user.interface";
-import UserService from "./user.service";
 import { getAuthData } from "~encore/auth";
 import { seedAdminUser } from "../../../prisma/seed";
+import {
+  CreateUserDto,
+  GoogleDto,
+  IFetchAllConversationListResponse,
+  LoginUserDto,
+  loginWithMobileDto,
+  TopFiveGifterResponse,
+  UpdateRegNoResponse,
+  UpdateUserDto,
+  UserDto,
+  UserLoginResponse,
+  UserResponse,
+  UserWithActiveDataAndDevicesResponse,
+  UserWithActiveDataResponse,
+} from "./user.interface";
+import UserService from "./user.service";
 
 /**
  * Method to create a new user
@@ -124,6 +124,10 @@ export const count = api(
 export const read = api(
   { expose: true, auth: true, method: "GET", path: "/users" },
   async (data: { page?: number; limit?: number; }): Promise<{ success: boolean; result: UserDto[]; }> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("Only Admin is allowed")
+    }
     const { result } = await UserService.find(data);
     return { success: true, result };
   }
@@ -177,6 +181,10 @@ export const update = api(
 export const destroy = api(
   { expose: true, auth: true, method: "DELETE", path: "/users/:id" },
   async ({ id }: { id: string }): Promise<{ success: boolean }> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("Only Admin is allowed")
+    }
     await UserService.delete(id);
     return { success: true };
   }
@@ -197,7 +205,7 @@ export const addDiamondToUser = api(
     const adminId = getAuthData()!.userID;
     const role = getAuthData()!.role
     if (role !== "ADMIN") {
-      throw APIError.permissionDenied("nly Admin is allowed")
+      throw APIError.permissionDenied("Only Admin is allowed")
     }
     const result = await UserService.addDiamondToUser(diamond, userId, adminId);
     return { success: true, result };
@@ -218,7 +226,7 @@ export const removeDiamond = api(
     const adminId = getAuthData()!.userID;
     const role = getAuthData()!.role
     if (role !== "ADMIN") {
-      throw APIError.permissionDenied("nly Admin is allowed")
+      throw APIError.permissionDenied("Only Admin is allowed")
     }
     const result = await UserService.removeDiamondFromUser(diamond, adminId, userId);
     return { success: true, result };
@@ -258,6 +266,10 @@ export const tempUserUpdate = api(
 export const updateRegNumber = api(
   { expose: true, auth: true, method: "PATCH", path: "/user/:userId/reg-number" },
   async ({ userId, newRegNumber }: { userId: string; newRegNumber: number }): Promise<UpdateRegNoResponse> => {
+    const role = getAuthData()!.role
+    if (role !== "ADMIN") {
+      throw APIError.permissionDenied("Only Admin is allowed")
+    }
     const updatedUser = await UserService.updateRegNumber(userId, newRegNumber);
     return { success: true, data: updatedUser };
   }
@@ -300,10 +312,10 @@ export const createAdminUser = api(
 export const removePurchase = api(
   { expose: true, auth: true, method: "DELETE", path: "/admin/remove-purchase/:userId/:name" },
   async (data: { userId: string, name: string }): Promise<{ success: true }> => {
-    const role = getAuthData()!.role
-    if (role !== "ADMIN") {
-      throw APIError.permissionDenied("nly Admin is allowed")
-    }
+    // const role = getAuthData()!.role
+    // if (role !== "ADMIN") {
+    //   throw APIError.permissionDenied("only Admin is allowed")
+    // }
     await UserService.removePurchase(
       data.userId,
       data.name
@@ -320,10 +332,10 @@ export const transferDiamond = api(
     if (typeof data.diamond !== "number" || Number.isNaN(data.diamond) || data.diamond < 0) {
       throw APIError.invalidArgument("Diamond must be a non-negative number");
     }
-    const role = getAuthData()!.role
-    if (role !== "ADMIN") {
-      throw APIError.permissionDenied("nly Admin is allowed")
-    }
+    // const role = getAuthData()!.role
+    // if (role !== "ADMIN") {
+    //   throw APIError.permissionDenied("nly Admin is allowed")
+    // }
     await UserService.transferDiamondWithoutHistory(data);
     return { success: true };
   }
@@ -339,10 +351,10 @@ export const addRemoveDiamondFromOrToUserWithoutHistory = api(
     if (typeof data.diamond !== "number" || Number.isNaN(data.diamond) || data.diamond < 0) {
       throw APIError.invalidArgument("Diamond must be a non-negative number");
     }
-    const role = getAuthData()!.role
-    if (role !== "ADMIN") {
-      throw APIError.permissionDenied("nly Admin is allowed")
-    }
+    // const role = getAuthData()!.role
+    // if (role !== "ADMIN") {
+    //   throw APIError.permissionDenied("nly Admin is allowed")
+    // }
     await UserService.addRemoveDiamondFromOrToUserWithoutHistory(data);
     return { success: true };
   }
