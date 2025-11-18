@@ -81,6 +81,27 @@ const UserRepository = {
       }
     });
   },
+  findUserWithHostInfo: async (id: string) => {
+    return prisma.user.findFirst({
+      where: { id },
+      select: {
+        diamond: true,
+        fullname: true,
+        profilePic: true,
+        isAgent: true,
+        isHost: true,
+        regNumber : true,
+        HostRequestUser: {
+          where: { status: "accepted" },
+          select: {
+            type: true,
+            status: true,
+          }
+        }
+
+      }
+    })
+  },
   removeAnimationFromUser: async (id: string) => {
     await prisma.animationPurchase.deleteMany({
       where: {

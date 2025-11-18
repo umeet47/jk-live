@@ -13,8 +13,8 @@ const DiamondSendPercentageRepository = {
   create: async (data: Prisma.DiamondSendPercentageCreateInput) => {
     return prisma.diamondSendPercentage.create({ data });
   },
-  update: async (    where: Prisma.DiamondSendPercentageWhereUniqueInput,    data: Prisma.DiamondSendPercentageUpdateInput  ) => {
-   return prisma.diamondSendPercentage.update({
+  update: async (where: Prisma.DiamondSendPercentageWhereUniqueInput, data: Prisma.DiamondSendPercentageUpdateInput) => {
+    return prisma.diamondSendPercentage.update({
       where,
       data,
     });

@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
+import { DiamonExchangeEnum } from "../src/modules/diamond-exchange/diamond-exchange.enum";
 
 const prisma = new PrismaClient();
 
@@ -77,14 +78,14 @@ export const seedDiamondSendPercentage = async () => {
         }
 
         // Create the initial record with 10% send percentage
-     const diamondSendPercentage =   await prisma.diamondSendPercentage.create({
+        const diamondSendPercentage = await prisma.diamondSendPercentage.create({
             data: {
                 percentage: 2,
                 subtractFrom: "sender"
             },
         });
 
-        console.log("Diamond send percentage seeded successfully.",diamondSendPercentage);
+        console.log("Diamond send percentage seeded successfully.", diamondSendPercentage);
     } catch (error) {
         console.error("Error seeding diamond send percentage:", error);
     } finally {
@@ -93,3 +94,37 @@ export const seedDiamondSendPercentage = async () => {
 };
 // Run the seed function
 seedDiamondSendPercentage();
+
+export const seedDiamondExchange = async () => {
+    const data = [
+        {
+            type: DiamonExchangeEnum.REGULAR,
+            diamond: 100000,
+            amount: 900
+        },
+        {
+            type: DiamonExchangeEnum.AGENT,
+            diamond: 100000,
+            amount: 1000
+        },
+        {
+            type: DiamonExchangeEnum.VIDEO_HOST,
+            diamond: 100000,
+            amount: 1000
+        }, {
+            type: DiamonExchangeEnum.AUDIO_HOST,
+            diamond: 100000,
+            amount: 900
+        }
+    ]
+
+    for (const d of data) {
+        const diamondExchange = await prisma.diamondExchange.findFirst({ where: { type: d.type } })
+        if (!diamondExchange) {
+            await prisma.diamondExchange.create({ data: d })
+        }
+    }
+    console.info("Diamond Exchange seeded")
+}
+
+seedDiamondExchange()

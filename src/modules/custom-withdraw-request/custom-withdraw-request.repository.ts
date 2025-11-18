@@ -1,18 +1,10 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../common/database";
-import { CreateCustomWithdrawRequestDto } from "./custom-withdraw-request.interface";
 
 const CustomWithdrawRepository = {
     // Create a new custom withdraw request
-    createCustomWithdrawRequest: async ({ amount, paymentType, userFullname, userId, userNumber }: CreateCustomWithdrawRequestDto) => {
-        return prisma.customWithdrawRequest.create({
-            data: {
-                paymentType,
-                userFullname,
-                userNumber,
-                amount,
-                userId
-            },
-        });
+    createCustomWithdrawRequest: async (data: Prisma.CustomWithdrawRequestUncheckedCreateInput) => {
+        return prisma.customWithdrawRequest.create({ data });
     },
 
     getById: async (id: string) => {
@@ -34,12 +26,12 @@ const CustomWithdrawRepository = {
     //         orderBy: { createdAt: "desc" },
     //     });
     // },
-    
-  // Get all custom withdraw requests
+
+    // Get all custom withdraw requests
     getCustomWithdrawRequests: async () => {
         return prisma.customWithdrawRequest.findMany({
             orderBy: { createdAt: "desc" },
-            include:{
+            include: {
                 user: {
                     select: {
                         id: true,

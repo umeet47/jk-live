@@ -2,10 +2,12 @@
 export interface CustomWithdrawRequest {
     id: string;
     userId: string;
+    regNumber: number;
     amount: number;
     paymentType: string;
-    userFullname: string;
-    userNumber: string;
+    fullname: string;
+    profilePic: string | null;
+    accountNumber: string;
     note: string | null;
     status: string; //"pending" | "accepted" | "rejected"
     createdAt: Date;
@@ -16,11 +18,9 @@ export interface CustomWithdrawRequest {
 //     user: UserBaseDto
 // }
 export interface CreateCustomWithdrawRequestDto {
-    userId: string;
-    amount: number;
+    diamond: number;
     paymentType: string;
-    userFullname: string;
-    userNumber: string;
+    accountNumber: string;
 }
 export interface CreateCustomWithdrawRequestResponse {
     success: boolean;

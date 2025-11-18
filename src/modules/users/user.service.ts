@@ -556,6 +556,13 @@ const UserService = {
     }
     return user;
   },
+  findUserWithHostInfo : async (id: string) => {
+    const user = await UserRepository.findUserWithHostInfo(id);
+    if (!user) {
+      throw APIError.notFound("User not found");
+    }
+    return user;
+  },
   // Update the regNumber of a user
   updateRegNumber: async (userId: string, newRegNumber: number) => {
     // Check if the new regNumber is already in use

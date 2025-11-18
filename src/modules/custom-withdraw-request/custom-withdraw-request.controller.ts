@@ -7,7 +7,9 @@ import CustomWithdrawService from "./custom-withdraw-request.service";
 export const createCustomWithdrawRequest = api(
     { expose: true, auth: true, method: "POST", path: "/custom-withdraw/request" },
     async (data: CreateCustomWithdrawRequestDto): Promise<CreateCustomWithdrawRequestResponse> => {
-        const request = await CustomWithdrawService.createCustomWithdrawRequest(data);
+        const userId = getAuthData()!.userID
+
+        const request = await CustomWithdrawService.createCustomWithdrawRequest(data, userId);
         return { success: true, data: request };
     }
 );

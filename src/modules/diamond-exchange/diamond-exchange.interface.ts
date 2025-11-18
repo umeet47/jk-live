@@ -10,6 +10,11 @@ export interface AddDiamondExchangeDto {
     diamond: number;
     amount: number;
 }
+export interface UpdateDiamondExchangeDto {
+    id: string;
+    diamond?: number;
+    amount?: number;
+}
 
 export interface AddDiamondExchangeResponse {
     success: boolean;
