@@ -274,6 +274,8 @@ const UserService = {
       throw APIError.unauthenticated("Only Admin is allowed");
     }
 
+    await DeviceService.handleDeviceOnLogin(user.id, payload.deviceId);
+
     const { accessToken, refreshToken } = generateTokens({
       userID: String(user.id),
     });

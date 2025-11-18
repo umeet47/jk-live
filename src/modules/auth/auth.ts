@@ -32,9 +32,11 @@ export const myAuthHandler = authHandler(
       const role = user.role;
       const accountType = user.accountType;
       const deviceId = user.deviceId
+      // if (role !== "ADMIN") {
       if (!deviceId) {
         throw APIError.unauthenticated("Device id not found")
       }
+      // }
       return { userID, role, accountType, isReseller: user.isReseller, deviceId: user.deviceId };
     } catch (e) {
       log.error(`Error while authenticating Error: ${e}`);
