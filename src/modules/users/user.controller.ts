@@ -51,7 +51,7 @@ export const create = api(
  */
 export const createAdmin = api(
   { expose: true, auth: true, method: "POST", path: "/users/admin" },
-  async ({ data }: { data: CreateUserDto }): Promise<UserResponse> => {
+  async (data: CreateUserDto): Promise<UserResponse> => {
     if (!data.fullname || !data.email || !data.password) {
       throw APIError.invalidArgument("Missing fields");
     }
