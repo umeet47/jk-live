@@ -128,3 +128,10 @@ export const seedDiamondExchange = async () => {
 }
 
 seedDiamondExchange()
+
+export const seedSystemSetting = async () => {
+    const systemSetting = await prisma.systemSetting.findFirst()
+    if (!systemSetting) {
+        await prisma.systemSetting.create({ data: { withdrawFlag: true } })
+    }
+}

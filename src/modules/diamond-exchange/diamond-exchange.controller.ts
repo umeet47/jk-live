@@ -6,8 +6,9 @@ import DiamondExchangeService from "./diamond-exchange.service";
 // API to add a new diamond exchange entry
 export const updateDiamondExchange = api(
     { expose: true, auth: true, method: "PATCH", path: "/diamond-exchange/update/:id" },
-    async (data:   UpdateDiamondExchangeDto): Promise<AddDiamondExchangeResponse> => {
+    async (data: UpdateDiamondExchangeDto): Promise<AddDiamondExchangeResponse> => {
         const role = getAuthData()!.role
+        console.info("role", role)
         if (role !== "ADMIN") {
             throw APIError.permissionDenied("Only Admin is allowed")
         }
