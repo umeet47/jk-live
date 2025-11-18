@@ -59,7 +59,7 @@ const LiveStreamService = {
         const sortedHosts = Object.values(hostDurations).sort((a, b) => b.totalDuration - a.totalDuration);
 
         // Limit to the top five hosts
-        const topFiveHosts = sortedHosts.slice(0, 5);
+        const topFiveHosts = sortedHosts.slice(0, 20);
 
         // Fetch user details for each host
         const hostDetails = await Promise.all(

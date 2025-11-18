@@ -157,10 +157,6 @@ const LiveStreamRepository = {
     // Fetch the top five hosts with the total live stream duration
     getTopFiveHostLiveStreamer: async () => {
         return prisma.liveStream.findMany({ where: { isCreatorHost: true } })
-        // return prisma.liveStream.groupBy({
-        //     by: ["hostId"],
-        //     where: { isCreatorHost: true },
-        // });
     },
 
     getAllProducerActivity: async () => {
