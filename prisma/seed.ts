@@ -133,5 +133,8 @@ export const seedSystemSetting = async () => {
     const systemSetting = await prisma.systemSetting.findFirst()
     if (!systemSetting) {
         await prisma.systemSetting.create({ data: { withdrawFlag: true } })
+        console.info("System Setting created")
     }
+    console.info("System Setting seeded")
 }
+seedSystemSetting()
