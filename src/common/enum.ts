@@ -1,6 +1,7 @@
 export type Role = "USER" | "ADMIN" | "MODERATOR" | "RESELLER";
 export type AccountType = "REGULAR" | "VIP" | "VVIP";
 export enum REAL_UPDATE {
+  SYSTEM_SETTING = "system-setting",
   DIAMOND_PACKAGE_ADDED = "diamond-package-added",
   DIAMOND_PACKAGE_REMOVED = "diamond-package-removed",
   USER_UPDATED = "user-updated",
