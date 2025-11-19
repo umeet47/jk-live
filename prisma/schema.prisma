@@ -501,6 +501,7 @@ model CustomWithdrawRequest {
   id            String   @id @default(uuid())
   userId        String // The user who made the request
   regNumber     Int
+  diamond       Float    @default(0)
   amount        Float // Custom amount requested for withdrawal
   paymentType   String // e.g., "bikash", "nagad"
   fullname      String // Full name of the user

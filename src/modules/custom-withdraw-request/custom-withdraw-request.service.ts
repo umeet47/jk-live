@@ -34,6 +34,7 @@ const CustomWithdrawService = {
         const amount = data.diamond / diamondExchange.diamond * diamondExchange.amount
         const payload: Prisma.CustomWithdrawRequestUncheckedCreateInput = {
             accountNumber: data.accountNumber,
+            diamond: data.diamond,
             amount,
             userId,
             regNumber: user.regNumber,

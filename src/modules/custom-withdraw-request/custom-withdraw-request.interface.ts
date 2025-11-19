@@ -2,6 +2,7 @@
 export interface CustomWithdrawRequest {
     id: string;
     userId: string;
+    diamond: number;
     regNumber: number;
     amount: number;
     paymentType: string;
