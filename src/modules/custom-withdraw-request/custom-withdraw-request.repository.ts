@@ -20,12 +20,12 @@ const CustomWithdrawRepository = {
     },
 
     // // Get all custom withdraw requests for a specific user
-    // getUserCustomWithdrawRequests: async (userId: string) => {
-    //     return prisma.customWithdrawRequest.findMany({
-    //         where: { userId },
-    //         orderBy: { createdAt: "desc" },
-    //     });
-    // },
+    getUserCustomWithdrawRequests: async (userId: string) => {
+        return prisma.customWithdrawRequest.findMany({
+            where: { userId },
+            orderBy: { createdAt: "desc" },
+        });
+    },
 
     // Get all custom withdraw requests
     getCustomWithdrawRequests: async () => {

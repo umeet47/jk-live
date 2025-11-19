@@ -36,14 +36,14 @@ export const getCustomWithdrawRequests = api(
     }
 );
 
-// // API to get all custom withdraw requests for a specific user
-// export const getUserCustomWithdrawRequests = api(
-//     { expose: true, auth: true, method: "GET", path: "/custom-withdraw/request/user/:userId" },
-//     async ({ userId }: { userId: string }): Promise<AllCustomWithdrawRequestListWithUserResponse> => {
-//         const requests = await CustomWithdrawService.getUserCustomWithdrawRequests(userId);
-//         return { success: true, data: requests };
-//     }
-// );
+// API to get all custom withdraw requests for a specific user
+export const getUserCustomWithdrawRequests = api(
+    { expose: true, auth: true, method: "GET", path: "/custom-withdraw/request/user/:userId" },
+    async ({ userId }: { userId: string }): Promise<AllCustomWithdrawRequestListResponse> => {
+        const requests = await CustomWithdrawService.getUserCustomWithdrawRequests(userId);
+        return { success: true, data: requests };
+    }
+);
 
 
 // // API to get all accepted or rejected custom withdraw requests

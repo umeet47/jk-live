@@ -61,9 +61,9 @@ const CustomWithdrawService = {
     },
 
     // Get all custom withdraw requests for a specific user
-    // getUserCustomWithdrawRequests: async (userId: string) => {
-    //     return await CustomWithdrawRepository.getUserCustomWithdrawRequests(userId);
-    // }, 
+    getUserCustomWithdrawRequests: async (userId: string) => {
+        return await CustomWithdrawRepository.getUserCustomWithdrawRequests(userId);
+    }, 
 
     // Get all custom withdraw requests
     getCustomWithdrawRequests: async () => {

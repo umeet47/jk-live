@@ -312,10 +312,6 @@ export const createAdminUser = api(
 export const removePurchase = api(
   { expose: true, auth: true, method: "DELETE", path: "/admin/remove-purchase/:userId/:name" },
   async (data: { userId: string, name: string }): Promise<{ success: true }> => {
-    // const role = getAuthData()!.role
-    // if (role !== "ADMIN") {
-    //   throw APIError.permissionDenied("only Admin is allowed")
-    // }
     await UserService.removePurchase(
       data.userId,
       data.name
@@ -332,10 +328,7 @@ export const transferDiamond = api(
     if (typeof data.diamond !== "number" || Number.isNaN(data.diamond) || data.diamond < 0) {
       throw APIError.invalidArgument("Diamond must be a non-negative number");
     }
-    // const role = getAuthData()!.role
-    // if (role !== "ADMIN") {
-    //   throw APIError.permissionDenied("nly Admin is allowed")
-    // }
+
     await UserService.transferDiamondWithoutHistory(data);
     return { success: true };
   }
@@ -351,10 +344,7 @@ export const addRemoveDiamondFromOrToUserWithoutHistory = api(
     if (typeof data.diamond !== "number" || Number.isNaN(data.diamond) || data.diamond < 0) {
       throw APIError.invalidArgument("Diamond must be a non-negative number");
     }
-    // const role = getAuthData()!.role
-    // if (role !== "ADMIN") {
-    //   throw APIError.permissionDenied("nly Admin is allowed")
-    // }
+
     await UserService.addRemoveDiamondFromOrToUserWithoutHistory(data);
     return { success: true };
   }
