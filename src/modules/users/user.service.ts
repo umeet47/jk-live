@@ -495,7 +495,7 @@ const UserService = {
     }) => {
     await UserRepository.updateDiamonds(amount, receiverId, senderId, diamondSendPercentage)
   },
-  removeDiamondFromUser: async (diamond: number, adminId: string, userId: string) => {
+  removeDiamondFromUser: async (diamond: number, handlerId: string, userId: string) => {
     const user = await UserRepository.findByUserId(userId);
     if (!user) {
       throw APIError.notFound("User not found");
@@ -508,7 +508,7 @@ const UserService = {
     // TODO: regarding diamond level
     const diamondHistoryPayload: DiamondHistoryPayload = {
       diamond,
-      handlerId: adminId,
+      handlerId,
       type: "remove",
       userId
     }

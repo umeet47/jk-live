@@ -223,12 +223,12 @@ export const removeDiamond = api(
       throw APIError.invalidArgument("Diamond must be a non-negative number");
     }
 
-    const adminId = getAuthData()!.userID;
-    const role = getAuthData()!.role
-    if (role !== "ADMIN") {
-      throw APIError.permissionDenied("Only Admin is allowed")
-    }
-    const result = await UserService.removeDiamondFromUser(diamond, adminId, userId);
+    const handlerId = getAuthData()!.userID;
+    // const role = getAuthData()!.role
+    // if (role !== "ADMIN") {
+    //   throw APIError.permissionDenied("Only Admin is allowed")
+    // }
+    const result = await UserService.removeDiamondFromUser(diamond, handlerId, userId);
     return { success: true, result };
   }
 );
