@@ -4,7 +4,7 @@ import { UpdateDiamondExchangeDto } from "./diamond-exchange.interface";
 
 const DiamondExchangeService = {
     getDiamondByType: async (type: string) => {
-        const exchange = await DiamondExchangeRepository.getDiamondExchangeById(type);
+        const exchange = await DiamondExchangeRepository.getDiamondExchangeByType(type);
         if (!exchange) {
             throw APIError.notFound("Diamond exchange entry not found.");
         }
