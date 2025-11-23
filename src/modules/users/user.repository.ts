@@ -90,7 +90,7 @@ const UserRepository = {
         profilePic: true,
         isAgent: true,
         isHost: true,
-        regNumber : true,
+        regNumber: true,
         HostRequestUser: {
           where: { status: "accepted" },
           select: {
@@ -275,10 +275,16 @@ const UserRepository = {
         const multiplier = Number(diamondSendPercentage.percentage);
         const diamondBonus = amount * multiplier / 100;
         if (diamondSendPercentage.subtractFrom === "sender") {
+          if ((amount + diamondBonus) > sender.diamond) {
+            throw APIError.aborted("Not sufficient amount in sender account")
+          }
           sender.diamond = sender.diamond - amount - diamondBonus;
           sender.diamondLevel = sender.diamondLevel + amount + diamondBonus;
           receiver.diamond = receiver.diamond + amount
         } else {
+          if ((amount) > sender.diamond) {
+            throw APIError.aborted("Not sufficient amount in sender account")
+          }
           sender.diamond = sender.diamond - amount
           sender.diamondLevel = sender.diamondLevel + amount
           receiver.diamond = receiver.diamond + amount - diamondBonus;

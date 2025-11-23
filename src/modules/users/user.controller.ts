@@ -224,10 +224,6 @@ export const removeDiamond = api(
     }
 
     const handlerId = getAuthData()!.userID;
-    // const role = getAuthData()!.role
-    // if (role !== "ADMIN") {
-    //   throw APIError.permissionDenied("Only Admin is allowed")
-    // }
     const result = await UserService.removeDiamondFromUser(diamond, handlerId, userId);
     return { success: true, result };
   }

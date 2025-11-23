@@ -25,7 +25,7 @@ export const seedAdminUser = async () => {
                 data: {
                     fullname: "Admin User",
                     password: hashedPassword,
-                    regNumber: 1, // Set regNumber to 1
+                    regNumber: 100, // Set regNumber to 1
                     role: "ADMIN",
                 },
             });
@@ -37,7 +37,7 @@ export const seedAdminUser = async () => {
                     fullname: "Admin User",
                     email,
                     password: hashedPassword,
-                    regNumber: 30, // Temporarily set regNumber to 30
+                    regNumber: 100, // Temporarily set regNumber to 30
                     role: "ADMIN",
                 },
             });
@@ -46,7 +46,7 @@ export const seedAdminUser = async () => {
             await prisma.user.update({
                 where: { email },
                 data: {
-                    regNumber: 1,
+                    regNumber: 100,
                 },
             });
 
