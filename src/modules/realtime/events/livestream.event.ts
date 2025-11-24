@@ -470,9 +470,9 @@ export const handleLiveStreamEvents = (
                                 senderId: id
                             });
                     });
-                    io?.emit(EMIT.INFORM_DIAMOND_MESSAGE, { roomId, message })
 
                     await UserService.transferDiamond(amount, receiverId, id, diamondSendPercentage)
+                    io?.emit(EMIT.INFORM_DIAMOND_MESSAGE, { roomId, message })
 
                     return { message }
                 }
