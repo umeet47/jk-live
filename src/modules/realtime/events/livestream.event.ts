@@ -18,6 +18,7 @@ import {
     IBlockUserInRoomDto,
     IConsumeDto,
     IConsumeResponse,
+    IConsumeResponseWithProducerGone,
     IConsumeResumeDto,
     ICreateRoom,
     ICreateWebrtcTransport,
@@ -80,35 +81,41 @@ export const handleLiveStreamEvents = (
 
                     const worker = getLeastLoadedWorker(workers);
                     const room = new Room(roomId, creator, worker, "live", payload.roomType);
-                    // Track live stream start
-                    const startTime = new Date()
-                    const userHost = await UserService.getUserInfo(creator.id)
-                    const data = {
-                        hostId: room.getCreatorInfo().id,
-                        roomId,
-                        isCreatorHost: userHost.isHost,
-                        type: payload.roomType || "video", // or "audio", depending on the stream type
-                        startTime,
+                    try {
+                        // Track live stream start
+                        const startTime = new Date()
+                        const userHost = await UserService.getUserInfo(creator.id)
+                        const data = {
+                            hostId: room.getCreatorInfo().id,
+                            roomId,
+                            isCreatorHost: userHost.isHost,
+                            type: payload.roomType || "video",
+                            startTime,
+                        }
+                        const liveStream = await LiveStreamService.createNewRecord(data)
+                        room.setLiveStreamId(liveStream.id)
+                        rooms.set(roomId, room);
+                        roomLiveList.set(roomId, false);
+                        worker.incrementRooms();
+                        const rtpCapabilities = room.addClient(creator);
+                        await room.userJoin(creator.id, "creator")
+                        await room.addToProduceList(creator.id);
+
+                        return {
+                            rtpCapabilities,
+                            roomType: room.getRoomType,
+                            roomId,
+                            roomStartTime: room.getRoomStartTime,
+                            inRoomMessageBlock: room.getInRoomMessageBlock()
+                        };
+                    } catch (err) {
+                        // Clean up half-created room to avoid ghost rooms
+                        rooms.delete(roomId);
+                        roomLiveList.delete(roomId);
+                        worker.decrementRooms();
+                        try { room.close(); } catch (e) { log.error("Error closing room:", e); }
+                        throw err;
                     }
-                    const liveStream = await LiveStreamService.createNewRecord(data)
-                    room.setLiveStreamId(liveStream.id)
-                    rooms.set(roomId, room);
-                    roomLiveList.set(roomId, false);
-                    worker.incrementRooms();
-
-                    const rtpCapabilities = room.addClient(creator);
-
-                    await room.userJoin(creator.id, "creator")
-                    await room.addToProduceList(creator.id);
-
-                    const response: ICreateRoomResponse = {
-                        rtpCapabilities,
-                        roomType: room.getRoomType,
-                        roomId,
-                        roomStartTime: room.getRoomStartTime,
-                        inRoomMessageBlock: room.getInRoomMessageBlock()
-                    };
-                    return response
                 }
             );
         }
@@ -439,7 +446,7 @@ export const handleLiveStreamEvents = (
                 LISTEN.SEND_DIAMOND,
                 callback,
                 async ({ id, fullname }: Member) => {
-                     // Validate amount: must be a number and not negative
+                    // Validate amount: must be a number and not negative
                     if (typeof amount !== "number" || Number.isNaN(amount) || amount < 0) {
                         throw APIError.invalidArgument("Amount must be a non-negative number");
                     }
@@ -518,7 +525,7 @@ export const handleLiveStreamEvents = (
         LISTEN.CONSUME,
         async (
             { roomId, ...rest }: IConsumeDto,
-            callback: Callback<IConsumeResponse>
+            callback: Callback<IConsumeResponse | IConsumeResponseWithProducerGone>
         ) => {
             await handleEvent(
                 socket,
@@ -831,27 +838,36 @@ export const handleLiveStreamEvents = (
 
                     const worker = getLeastLoadedWorker(workers);
                     const room = new Room(roomId, creator, worker, "p2p");
-                    // Track live stream start
-                    const startTime = new Date()
-                    const userHost = await UserService.getUserInfo(creator.id)
-                    const data = {
-                        hostId: room.getCreatorInfo().id,
-                        roomId,
-                        isCreatorHost: userHost.isHost,
-                        type: "video", // or "audio", depending on the stream type
-                        startTime,
+                    try {
+                        // Track live stream start
+                        const startTime = new Date()
+                        const userHost = await UserService.getUserInfo(creator.id)
+                        const data = {
+                            hostId: room.getCreatorInfo().id,
+                            roomId,
+                            isCreatorHost: userHost.isHost,
+                            type: "video",
+                            startTime,
+                        }
+                        const liveStream = await LiveStreamService.createNewRecord(data)
+                        room.setLiveStreamId(liveStream.id)
+                        rooms.set(roomId, room);
+                        roomLiveList.set(roomId, false);
+                        worker.incrementRooms();
+
+                        const rtpCapabilities = room.addClient(creator);
+                        await room.userJoin(creator.id, "creator")
+                        await room.addToProduceList(creator.id);
+
+                        return { rtpCapabilities, roomId, roomStartTime: room.getRoomStartTime };
+                    } catch (err) {
+                        // Clean up half-created room to avoid ghost rooms
+                        rooms.delete(roomId);
+                        roomLiveList.delete(roomId);
+                        worker.decrementRooms();
+                        try { room.close(); } catch (e) { log.error("Error closing room:", e); }
+                        throw err;
                     }
-                    const liveStream = await LiveStreamService.createNewRecord(data)
-                    room.setLiveStreamId(liveStream.id)
-                    rooms.set(roomId, room);
-                    roomLiveList.set(roomId, false);
-                    worker.incrementRooms();
-
-                    const rtpCapabilities = room.addClient(creator);
-                    await room.userJoin(creator.id, "creator")
-                    await room.addToProduceList(creator.id);
-
-                    return { rtpCapabilities, roomId, roomStartTime: room.getRoomStartTime };
                 }
             );
         }

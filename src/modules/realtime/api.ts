@@ -6,6 +6,7 @@ import RoomHistoryRepository from "./repositories/roomHistory.repository";
 import P2PMessageService from "./services/realtime.service";
 import { MessageHistory } from "./interfaces/p2p-call.interface";
 import { UserWithLastMessageOnlyDto } from "../users/user.interface";
+import log from "encore.dev/log";
 
 // Initialize Socket.IO server on app startup
 // Singleton pattern to ensure socket server is initialized only once
@@ -82,3 +83,67 @@ export const fetchP2pMessageHistory = api(
     return { success: true, data, totalCount };
   }
 ); 
+
+// ─── ICE / TURN credentials endpoint ──────────────────────────
+// Returns ICE servers with credentials from server-side env vars.
+// Clients should call this on each session instead of hardcoding creds.
+
+interface IceServerEntry {
+  urls: string | string[];
+  username?: string;
+  credential?: string;
+}
+
+interface IceServersResponse {
+  success: boolean;
+  iceServers: IceServerEntry[];
+}
+
+export const getIceServers = api(
+  { method: "GET", expose: true, auth: true, path: "/ice-servers" },
+  async (): Promise<IceServersResponse> => {
+    const cfUser = process.env.CLOUDFLARE_TURN_USERNAME;
+    const cfCred = process.env.CLOUDFLARE_TURN_CREDENTIAL;
+    const meteredUser = process.env.METERED_TURN_USERNAME;
+    const meteredCred = process.env.METERED_TURN_CREDENTIAL;
+
+    if (!cfUser || !cfCred || !meteredUser || !meteredCred) {
+      log.error("TURN credentials not configured in environment variables");
+    }
+
+    const iceServers: IceServerEntry[] = [
+      // STUN servers (public, no credentials needed)
+      { urls: ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"] },
+      { urls: ["stun:stun.cloudflare.com:3478", "stun:stun.cloudflare.com:53"] },
+      { urls: "stun:stun.relay.metered.ca:80" },
+    ];
+
+    // Cloudflare TURN (only if configured)
+    if (cfUser && cfCred) {
+      iceServers.push({
+        urls: [
+          "turn:turn.cloudflare.com:3478?transport=udp",
+          "turn:turn.cloudflare.com:3478?transport=tcp",
+          "turns:turn.cloudflare.com:5349?transport=tcp",
+          "turn:turn.cloudflare.com:53?transport=udp",
+          "turn:turn.cloudflare.com:80?transport=tcp",
+          "turns:turn.cloudflare.com:443?transport=tcp",
+        ],
+        username: cfUser,
+        credential: cfCred,
+      });
+    }
+
+    // Metered TURN (only if configured)
+    if (meteredUser && meteredCred) {
+      iceServers.push(
+        { urls: "turn:global.relay.metered.ca:80", username: meteredUser, credential: meteredCred },
+        { urls: "turn:global.relay.metered.ca:80?transport=tcp", username: meteredUser, credential: meteredCred },
+        { urls: "turn:global.relay.metered.ca:443", username: meteredUser, credential: meteredCred },
+        { urls: "turns:global.relay.metered.ca:443?transport=tcp", username: meteredUser, credential: meteredCred },
+      );
+    }
+
+    return { success: true, iceServers };
+  },
+);

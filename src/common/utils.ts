@@ -27,8 +27,11 @@ export const paginatedData = (params: PaginatedParams): Paginated => {
 };
 
 export const generateTokens = (payload: { userID: string }): TokensDto => {
-  const accessSecret = process.env.ACCESS_TOKEN_SECRET || "secretAccessToken1";
-  const refreshSecret = process.env.REFRESH_TOKEN_SECRET || "secretRefreshToken1";
+  const accessSecret = process.env.ACCESS_TOKEN_SECRET;
+  const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
+  if (!accessSecret || !refreshSecret) {
+    throw new Error("JWT secrets not configured: set ACCESS_TOKEN_SECRET and REFRESH_TOKEN_SECRET env vars");
+  }
   const accessExpiry = process.env.ACCESS_TOKEN_SECRET_EXPIRES_IN || "30d" as any;
   const refreshExpiry = process.env.REFRESH_TOKEN_SECRET_EXPIRES_IN || "100d" as any;
   const accessToken = jwt.sign(payload, accessSecret, {
@@ -72,8 +75,10 @@ export const UserMiddleware: Middleware = middleware(
 );
 export const verifyAccessToken = (token: string): string => {
   try {
-
-    const accessSecret = process.env.ACCESS_TOKEN_SECRET || "secretAccessToken1";
+    const accessSecret = process.env.ACCESS_TOKEN_SECRET;
+    if (!accessSecret) {
+      throw new Error("ACCESS_TOKEN_SECRET env var is not configured");
+    }
     const data = jwt.verify(token, accessSecret);
     const userID = typeof data === "string" ? data : data.userID;
     return userID;
@@ -87,7 +92,10 @@ export const verifyAccessToken = (token: string): string => {
 
 export const verifyRefreshToken = (token: string): string => {
   try {
-    const refreshSecret = process.env.REFRESH_TOKEN_SECRET || "secretRefreshToken1";
+    const refreshSecret = process.env.REFRESH_TOKEN_SECRET;
+    if (!refreshSecret) {
+      throw new Error("REFRESH_TOKEN_SECRET env var is not configured");
+    }
     const data = jwt.verify(token, refreshSecret);
     const userID = typeof data === "string" ? data : data.userID;
     return userID;
