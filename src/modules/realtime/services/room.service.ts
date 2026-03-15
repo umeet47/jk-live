@@ -379,7 +379,7 @@ class Room {
     if (!producer) {
       log.warn(`Producer not found for userId: ${memberId} in room ${this.roomId}`);
       return; // Gracefully exit if producer is already removed
-    // Optionally: return false or a status if you want to signal this upstream
+      // Optionally: return false or a status if you want to signal this upstream
     }
     producer.video?.close();
     producer.audio?.close();
@@ -620,8 +620,11 @@ class Room {
         throw APIError.aborted("Cannot consume own data");
       }
       const target_producer = this.getProducerValueByKind(kind, clientId);
+      if (!target_producer) {
+        log.warn(`Producer ${kind} no longer available for userId: ${clientId} in room ${this.roomId}`);
+        return { producer_gone: true, kind, clientId };
+      }
       if (
-        !target_producer ||
         !rtpCapabilities ||
         !this.router.canConsume({
           producerId: target_producer.id,
@@ -710,6 +713,7 @@ class Room {
         await consumer.resume();
       });
       consumer.on("score", (_score: ConsumerScore) => {
+        // Score monitoring - enable for debugging
         // console.info(
         //   `room ${
         //     this.roomId
@@ -721,6 +725,7 @@ class Room {
         // );
       });
       consumer.on("layerschange", (_layers: ConsumerLayers | undefined) => {
+        // Layer change monitoring - enable for debugging
         // console.info(
         //   `room ${
         //     this.roomId
@@ -803,7 +808,10 @@ class Room {
       console.info(`room ${this.roomId} producer pause kind: ${kind} `);
 
       const producer = this.getProducerValueByKind(kind, clientId);
-
+      if (!producer) {
+        log.warn(`producerPause: ${kind} producer not found for userId: ${clientId} in room ${this.roomId}`);
+        return;
+      }
       if (!producer.paused) {
         await producer.pause();
       }
@@ -821,7 +829,10 @@ class Room {
       console.info(`room ${this.roomId} producer resume kind: ${kind} `);
 
       const producer = this.getProducerValueByKind(kind, clientId);
-
+      if (!producer) {
+        log.warn(`producerResume: ${kind} producer not found for userId: ${clientId} in room ${this.roomId}`);
+        return;
+      }
       if (producer.paused) {
         await producer.resume();
       }
@@ -850,8 +861,13 @@ class Room {
   }
   getProducerByUserId(userId: string): IProducer {
     const producer = this.producers.get(userId);
-    if (!producer) throw APIError.notFound("Producer not found");
+    if (!producer) throw APIError.notFound(`Producer not found for userId: ${userId}`);
     return producer;
+  }
+
+  /** Safe variant — returns null when the producer has already left, instead of throwing */
+  getProducerByUserIdSafe(userId: string): IProducer | null {
+    return this.producers.get(userId) ?? null;
   }
   private getConsumerByUserId(userId: string): IConsumer {
     const consumer = this.consumers.get(userId);
@@ -860,24 +876,16 @@ class Room {
     }
     return consumer;
   }
-  private getProducerValueByKind(kind: MediaKind, userId: string): Producer {
+  private getProducerValueByKind(kind: MediaKind, userId: string): Producer | null {
     const producer = this.producers.get(userId);
     if (!producer) {
-      throw APIError.notFound("Producer not found");
+      return null;
     }
 
     if (kind === "video") {
-      const video = producer.video;
-      if (!video) {
-        throw APIError.notFound("Video Producer not found");
-      }
-      return video;
+      return producer.video ?? null;
     } else {
-      const audio = producer.audio;
-      if (!audio) {
-        throw APIError.notFound("Audio Producer not found");
-      }
-      return audio;
+      return producer.audio ?? null;
     }
   }
   private getConsumerValueByKind(

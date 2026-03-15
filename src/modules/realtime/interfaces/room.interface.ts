@@ -146,6 +146,11 @@ export interface IConsumeResponse {
     type: ConsumerType;
     producerPaused: boolean;
 }
+export interface IConsumeResponseWithProducerGone {
+    producer_gone: boolean; // Indicates if the producer has already left, added for better error handling on consumer side
+    kind: MediaKind;
+    clientId: string;
+}
 export interface IProduceDto {
     roomId: string;
     kind: MediaKind;
